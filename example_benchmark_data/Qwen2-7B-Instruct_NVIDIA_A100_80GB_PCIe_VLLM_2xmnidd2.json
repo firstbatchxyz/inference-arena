@@ -1,0 +1,20 @@
+{
+  "model_name": "Qwen2-7B-Instruct",
+  "benchmark_type": "throughput",
+  "parameter_size": "7b",
+  "inference_engine": "VLLM",
+  "hardware": "NVIDIA A100 80GB PCIe",
+  "memory": 100,
+  "download_speed": null,
+  "server_type": "Runpod",
+  "cost": 0.18586666666666665,
+  "avg_ttft_ms": 288.65993509487225,
+  "avg_throughput": 329.50647753999635,
+  "test_duration": 337.279276,
+  "container_setup": 206,
+  "avg_input_token_per_request": 82.14705882352942,
+  "avg_output_token_per_request": 91.1530612244898,
+  "total_requests": 102,
+  "model_download_time": 206,
+  "server_cost_per_hour": 1.64
+}

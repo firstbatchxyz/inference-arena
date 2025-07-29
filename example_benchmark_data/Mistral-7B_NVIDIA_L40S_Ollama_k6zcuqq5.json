@@ -1,0 +1,20 @@
+{
+  "model_name": "Mistral-7B",
+  "benchmark_type": "throughput",
+  "parameter_size": "7b",
+  "inference_engine": "Ollama",
+  "hardware": "NVIDIA L40S",
+  "memory": 120,
+  "download_speed": null,
+  "server_type": "Runpod",
+  "cost": 0.04323888888888889,
+  "avg_ttft_ms": 5597.484668095906,
+  "avg_throughput": 129.44901795486567,
+  "test_duration": 174.236282,
+  "container_setup": 37,
+  "avg_input_token_per_request": 0.21442495126705652,
+  "avg_output_token_per_request": 450.3333333333333,
+  "total_requests": 513,
+  "model_download_time": 20,
+  "server_cost_per_hour": 0.86
+}

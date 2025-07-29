@@ -1,0 +1,20 @@
+{
+  "model_name": "Gemma-2B",
+  "benchmark_type": "throughput",
+  "parameter_size": "2b",
+  "inference_engine": "VLLM",
+  "hardware": "NVIDIA GeForce RTX 4090",
+  "memory": 80,
+  "download_speed": null,
+  "server_type": "Runpod",
+  "cost": 0.08011666666666666,
+  "avg_ttft_ms": 6091.200864648405,
+  "avg_throughput": 2508.337381181832,
+  "test_duration": 379.476575,
+  "container_setup": 134,
+  "avg_input_token_per_request": 58.64923076923077,
+  "avg_output_token_per_request": 65.01542912246866,
+  "total_requests": 1300,
+  "model_download_time": 134,
+  "server_cost_per_hour": 0.69
+}

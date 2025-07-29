@@ -1,0 +1,20 @@
+{
+  "model_name": "Qwen2.5-72B",
+  "benchmark_type": "throughput",
+  "parameter_size": "72b",
+  "inference_engine": "VLLM",
+  "hardware": "NVIDIA H200",
+  "memory": 1200,
+  "download_speed": null,
+  "server_type": "Runpod",
+  "cost": 1.3322166666666668,
+  "avg_ttft_ms": 13038.17631597594,
+  "avg_throughput": 1219.120526227776,
+  "test_duration": 385.46896,
+  "container_setup": 1501,
+  "avg_input_token_per_request": 34.521303258145366,
+  "avg_output_token_per_request": 64.40551181102363,
+  "total_requests": 798,
+  "model_download_time": 1501,
+  "server_cost_per_hour": 7.98
+}

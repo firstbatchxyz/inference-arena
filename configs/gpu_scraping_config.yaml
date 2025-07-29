@@ -1,0 +1,161 @@
+# GPU Pricing Scraping Configuration
+# This file contains the configuration for scraping GPU pricing from various sites
+
+scraping_sites:
+  runpod:
+    name: "RunPod"
+    url: "https://runpod.io/gpu-instances"
+    template: |
+      {% set gpu_data = [] %}
+      {% for element in html.split('<div class="gpu-instance">') %}
+          {% if 'gpu-name' in element %}
+              {% set gpu_name = element.split('gpu-name">')[1].split('</')[0] if 'gpu-name">' in element else 'Unknown' %}
+              {% set price_text = element.split('price">')[1].split('</')[0] if 'price">' in element else '0' %}
+              {% set price = price_text.replace('$', '').replace('/hr', '').strip() | float %}
+              {% set gpu_info = {
+                  'gpu_name': gpu_name,
+                  'price_per_hour': price,
+                  'currency': 'USD',
+                  'site_name': 'RunPod',
+                  'region': 'Global'
+              } %}
+              {% set _ = gpu_data.append(gpu_info) %}
+          {% endif %}
+      {% endfor %}
+      {{ gpu_data | tojson }}
+    headers:
+      User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    enabled: true
+
+  vast_ai:
+    name: "Vast.ai"
+    url: "https://vast.ai/console/create/"
+    template: |
+      {% set gpu_data = [] %}
+      {% for element in html.split('<div class="gpu-offer">') %}
+          {% if 'gpu-type' in element %}
+              {% set gpu_name = element.split('gpu-type">')[1].split('</')[0] if 'gpu-type">' in element else 'Unknown' %}
+              {% set price_text = element.split('price">')[1].split('</')[0] if 'price">' in element else '0' %}
+              {% set price = price_text.replace('$', '').replace('/hr', '').strip() | float %}
+              {% set gpu_info = {
+                  'gpu_name': gpu_name,
+                  'price_per_hour': price,
+                  'currency': 'USD',
+                  'site_name': 'Vast.ai',
+                  'region': 'Global'
+              } %}
+              {% set _ = gpu_data.append(gpu_info) %}
+          {% endif %}
+      {% endfor %}
+      {{ gpu_data | tojson }}
+    headers:
+      User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    enabled: true
+
+  lambdalabs:
+    name: "Lambda Labs"
+    url: "https://cloud.lambdalabs.com/instances"
+    template: |
+      {% set gpu_data = [] %}
+      {% for element in html.split('<div class="instance">') %}
+          {% if 'gpu-spec' in element %}
+              {% set gpu_name = element.split('gpu-spec">')[1].split('</')[0] if 'gpu-spec">' in element else 'Unknown' %}
+              {% set price_text = element.split('price">')[1].split('</')[0] if 'price">' in element else '0' %}
+              {% set price = price_text.replace('$', '').replace('/hr', '').strip() | float %}
+              {% set gpu_info = {
+                  'gpu_name': gpu_name,
+                  'price_per_hour': price,
+                  'currency': 'USD',
+                  'site_name': 'Lambda Labs',
+                  'region': 'Global'
+              } %}
+              {% set _ = gpu_data.append(gpu_info) %}
+          {% endif %}
+      {% endfor %}
+      {{ gpu_data | tojson }}
+    headers:
+      User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    enabled: true
+
+  paperspace:
+    name: "Paperspace"
+    url: "https://www.paperspace.com/gpu-cloud"
+    template: |
+      {% set gpu_data = [] %}
+      {% for element in html.split('<div class="gpu-instance">') %}
+          {% if 'gpu-name' in element %}
+              {% set gpu_name = element.split('gpu-name">')[1].split('</')[0] if 'gpu-name">' in element else 'Unknown' %}
+              {% set price_text = element.split('price">')[1].split('</')[0] if 'price">' in element else '0' %}
+              {% set price = price_text.replace('$', '').replace('/hr', '').strip() | float %}
+              {% set gpu_info = {
+                  'gpu_name': gpu_name,
+                  'price_per_hour': price,
+                  'currency': 'USD',
+                  'site_name': 'Paperspace',
+                  'region': 'Global'
+              } %}
+              {% set _ = gpu_data.append(gpu_info) %}
+          {% endif %}
+      {% endfor %}
+      {{ gpu_data | tojson }}
+    headers:
+      User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    enabled: true
+
+# GPU Name Normalization Configuration
+gpu_normalization:
+  # Standard GPU name mappings
+  mappings:
+    # NVIDIA RTX Series
+    "rtx 4090": "RTX 4090"
+    "rtx 4090 ti": "RTX 4090 Ti"
+    "rtx 4080": "RTX 4080"
+    "rtx 4080 ti": "RTX 4080 Ti"
+    "rtx 4070": "RTX 4070"
+    "rtx 4070 ti": "RTX 4070 Ti"
+    "rtx 3090": "RTX 3090"
+    "rtx 3080": "RTX 3080"
+    "rtx 3070": "RTX 3070"
+    "rtx 3060": "RTX 3060"
+    
+    # NVIDIA Data Center GPUs
+    "a100": "NVIDIA A100"
+    "a100 80gb": "NVIDIA A100 80GB"
+    "a100 40gb": "NVIDIA A100 40GB"
+    "h100": "NVIDIA H100"
+    "h100 80gb": "NVIDIA H100 80GB"
+    "h100 40gb": "NVIDIA H100 40GB"
+    "v100": "NVIDIA V100"
+    "v100 32gb": "NVIDIA V100 32GB"
+    "v100 16gb": "NVIDIA V100 16GB"
+    "t4": "NVIDIA T4"
+    "l4": "NVIDIA L4"
+    "l40": "NVIDIA L40"
+    "l40s": "NVIDIA L40S"
+    
+    # AMD GPUs
+    "rx 7900 xtx": "RX 7900 XTX"
+    "rx 7900 xt": "RX 7900 XT"
+    "rx 7800 xt": "RX 7800 XT"
+    "rx 7700 xt": "RX 7700 XT"
+    "rx 7600": "RX 7600"
+
+# Scraping Schedule Configuration
+schedule:
+  interval_hours: 12
+  retry_attempts: 3
+  retry_delay_seconds: 300
+
+# MongoDB Configuration
+mongodb:
+  collections:
+    gpu_pricing: "gpu_pricing"
+    gpu_pricing_summary: "gpu_pricing_summary"
+    gpu_matching_log: "gpu_matching_log"
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  file: "gpu_scraper.log"
+  max_size_mb: 100
+  backup_count: 5 

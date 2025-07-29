@@ -1,0 +1,20 @@
+{
+  "model_name": "Llama-3-8B",
+  "benchmark_type": "throughput",
+  "parameter_size": "8b",
+  "inference_engine": "VLLM",
+  "hardware": "NVIDIA H100 PCIe",
+  "memory": 200,
+  "download_speed": null,
+  "server_type": "Runpod",
+  "cost": 0.41360277777777776,
+  "avg_ttft_ms": 7073.70769189276,
+  "avg_throughput": 1868.4670060174556,
+  "test_duration": 384.822797,
+  "container_setup": 475,
+  "avg_input_token_per_request": 52.196269982238015,
+  "avg_output_token_per_request": 69.14574898785425,
+  "total_requests": 1126,
+  "model_download_time": 475,
+  "server_cost_per_hour": 2.39
+}

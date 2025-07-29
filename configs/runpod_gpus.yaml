@@ -1,0 +1,249 @@
+# RunPod GPU Specifications
+# This file contains GPU information available on RunPod platform
+
+gpus:
+  # AMD GPUs
+  - id: "AMD Instinct MI300X OAM"
+    display_name: "MI300X"
+    memory_gb: 192
+    manufacturer: "AMD"
+    type: "Data Center"
+
+  # NVIDIA Data Center GPUs
+  - id: "NVIDIA A100 80GB PCIe"
+    display_name: "A100 PCIe"
+    memory_gb: 80
+    manufacturer: "NVIDIA"
+    type: "Data Center"
+
+  - id: "NVIDIA A100-SXM4-80GB"
+    display_name: "A100 SXM"
+    memory_gb: 80
+    manufacturer: "NVIDIA"
+    type: "Data Center"
+
+  - id: "NVIDIA A30"
+    display_name: "A30"
+    memory_gb: 24
+    manufacturer: "NVIDIA"
+    type: "Data Center"
+
+  - id: "NVIDIA A40"
+    display_name: "A40"
+    memory_gb: 48
+    manufacturer: "NVIDIA"
+    type: "Data Center"
+
+  - id: "NVIDIA B200"
+    display_name: "B200"
+    memory_gb: 180
+    manufacturer: "NVIDIA"
+    type: "Data Center"
+
+  - id: "NVIDIA H100 80GB HBM3"
+    display_name: "H100 SXM"
+    memory_gb: 80
+    manufacturer: "NVIDIA"
+    type: "Data Center"
+
+  - id: "NVIDIA H100 NVL"
+    display_name: "H100 NVL"
+    memory_gb: 94
+    manufacturer: "NVIDIA"
+    type: "Data Center"
+
+  - id: "NVIDIA H100 PCIe"
+    display_name: "H100 PCIe"
+    memory_gb: 80
+    manufacturer: "NVIDIA"
+    type: "Data Center"
+
+  - id: "NVIDIA H200"
+    display_name: "H200 SXM"
+    memory_gb: 141
+    manufacturer: "NVIDIA"
+    type: "Data Center"
+
+  - id: "NVIDIA L4"
+    display_name: "L4"
+    memory_gb: 24
+    manufacturer: "NVIDIA"
+    type: "Data Center"
+
+  - id: "NVIDIA L40"
+    display_name: "L40"
+    memory_gb: 48
+    manufacturer: "NVIDIA"
+    type: "Data Center"
+
+  - id: "NVIDIA L40S"
+    display_name: "L40S"
+    memory_gb: 48
+    manufacturer: "NVIDIA"
+    type: "Data Center"
+
+  # NVIDIA GeForce RTX Series
+  - id: "NVIDIA GeForce RTX 3070"
+    display_name: "RTX 3070"
+    memory_gb: 8
+    manufacturer: "NVIDIA"
+    type: "Consumer"
+
+  - id: "NVIDIA GeForce RTX 3080"
+    display_name: "RTX 3080"
+    memory_gb: 10
+    manufacturer: "NVIDIA"
+    type: "Consumer"
+
+  - id: "NVIDIA GeForce RTX 3080 Ti"
+    display_name: "RTX 3080 Ti"
+    memory_gb: 12
+    manufacturer: "NVIDIA"
+    type: "Consumer"
+
+  - id: "NVIDIA GeForce RTX 3090"
+    display_name: "RTX 3090"
+    memory_gb: 24
+    manufacturer: "NVIDIA"
+    type: "Consumer"
+
+  - id: "NVIDIA GeForce RTX 3090 Ti"
+    display_name: "RTX 3090 Ti"
+    memory_gb: 24
+    manufacturer: "NVIDIA"
+    type: "Consumer"
+
+  - id: "NVIDIA GeForce RTX 4070 Ti"
+    display_name: "RTX 4070 Ti"
+    memory_gb: 12
+    manufacturer: "NVIDIA"
+    type: "Consumer"
+
+  - id: "NVIDIA GeForce RTX 4080"
+    display_name: "RTX 4080"
+    memory_gb: 16
+    manufacturer: "NVIDIA"
+    type: "Consumer"
+
+  - id: "NVIDIA GeForce RTX 4080 SUPER"
+    display_name: "RTX 4080 SUPER"
+    memory_gb: 16
+    manufacturer: "NVIDIA"
+    type: "Consumer"
+
+  - id: "NVIDIA GeForce RTX 4090"
+    display_name: "RTX 4090"
+    memory_gb: 24
+    manufacturer: "NVIDIA"
+    type: "Consumer"
+
+  - id: "NVIDIA GeForce RTX 5080"
+    display_name: "RTX 5080"
+    memory_gb: 16
+    manufacturer: "NVIDIA"
+    type: "Consumer"
+
+  - id: "NVIDIA GeForce RTX 5090"
+    display_name: "RTX 5090"
+    memory_gb: 32
+    manufacturer: "NVIDIA"
+    type: "Consumer"
+
+  # NVIDIA RTX Ada Generation
+  - id: "NVIDIA RTX 2000 Ada Generation"
+    display_name: "RTX 2000 Ada"
+    memory_gb: 16
+    manufacturer: "NVIDIA"
+    type: "Workstation"
+
+  - id: "NVIDIA RTX 4000 Ada Generation"
+    display_name: "RTX 4000 Ada"
+    memory_gb: 20
+    manufacturer: "NVIDIA"
+    type: "Workstation"
+
+  - id: "NVIDIA RTX 5000 Ada Generation"
+    display_name: "RTX 5000 Ada"
+    memory_gb: 32
+    manufacturer: "NVIDIA"
+    type: "Workstation"
+
+  - id: "NVIDIA RTX 6000 Ada Generation"
+    display_name: "RTX 6000 Ada"
+    memory_gb: 48
+    manufacturer: "NVIDIA"
+    type: "Workstation"
+
+  # NVIDIA RTX A Series
+  - id: "NVIDIA RTX A2000"
+    display_name: "RTX A2000"
+    memory_gb: 6
+    manufacturer: "NVIDIA"
+    type: "Workstation"
+
+  - id: "NVIDIA RTX A4000"
+    display_name: "RTX A4000"
+    memory_gb: 16
+    manufacturer: "NVIDIA"
+    type: "Workstation"
+
+  - id: "NVIDIA RTX A4500"
+    display_name: "RTX A4500"
+    memory_gb: 20
+    manufacturer: "NVIDIA"
+    type: "Workstation"
+
+  - id: "NVIDIA RTX A5000"
+    display_name: "RTX A5000"
+    memory_gb: 24
+    manufacturer: "NVIDIA"
+    type: "Workstation"
+
+  - id: "NVIDIA RTX A6000"
+    display_name: "RTX A6000"
+    memory_gb: 48
+    manufacturer: "NVIDIA"
+    type: "Workstation"
+
+  - id: "NVIDIA RTX PRO 6000 Blackwell Workstation Edition"
+    display_name: "RTX PRO 6000"
+    memory_gb: 96
+    manufacturer: "NVIDIA"
+    type: "Workstation"
+
+  # Tesla Series
+  - id: "Tesla V100-FHHL-16GB"
+    display_name: "V100 FHHL"
+    memory_gb: 16
+    manufacturer: "NVIDIA"
+    type: "Data Center"
+
+  - id: "Tesla V100-PCIE-16GB"
+    display_name: "Tesla V100"
+    memory_gb: 16
+    manufacturer: "NVIDIA"
+    type: "Data Center"
+
+  - id: "Tesla V100-SXM2-16GB"
+    display_name: "V100 SXM2"
+    memory_gb: 16
+    manufacturer: "NVIDIA"
+    type: "Data Center"
+
+# Summary Statistics
+summary:
+  total_gpus: 42
+  manufacturers:
+    nvidia: 40
+    amd: 1
+    tesla: 1
+  memory_ranges:
+    "0-10GB": 4
+    "11-20GB": 8
+    "21-50GB": 15
+    "51-100GB": 10
+    "100GB+": 5
+  types:
+    "Data Center": 15
+    "Consumer": 11
+    "Workstation": 16 

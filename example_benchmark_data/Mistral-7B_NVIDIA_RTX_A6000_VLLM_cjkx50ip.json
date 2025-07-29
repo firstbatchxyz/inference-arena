@@ -1,0 +1,20 @@
+{
+  "model_name": "Mistral-7B",
+  "benchmark_type": "throughput",
+  "parameter_size": "7b",
+  "inference_engine": "VLLM",
+  "hardware": "NVIDIA RTX A6000",
+  "memory": 150,
+  "download_speed": null,
+  "server_type": "Runpod",
+  "cost": 0.07064166666666666,
+  "avg_ttft_ms": 10049.784780717364,
+  "avg_throughput": 1542.57886870419,
+  "test_duration": 369.000031,
+  "container_setup": 165,
+  "avg_input_token_per_request": 46.46532438478747,
+  "avg_output_token_per_request": 68.01633986928105,
+  "total_requests": 894,
+  "model_download_time": 165,
+  "server_cost_per_hour": 0.49
+}

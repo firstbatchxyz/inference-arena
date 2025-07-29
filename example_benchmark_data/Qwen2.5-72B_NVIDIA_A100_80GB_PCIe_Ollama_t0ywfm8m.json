@@ -1,0 +1,20 @@
+{
+  "model_name": "Qwen2.5-72B",
+  "benchmark_type": "throughput",
+  "parameter_size": "72b",
+  "inference_engine": "Ollama",
+  "hardware": "NVIDIA A100 80GB PCIe",
+  "memory": 700,
+  "download_speed": null,
+  "server_type": "Runpod",
+  "cost": 0.2847222222222222,
+  "avg_ttft_ms": 8246.895790100098,
+  "avg_throughput": 14.215141425516908,
+  "test_duration": 496.241182,
+  "container_setup": 32,
+  "avg_input_token_per_request": null,
+  "avg_output_token_per_request": 373,
+  "total_requests": 9,
+  "model_download_time": 124,
+  "server_cost_per_hour": 1.64
+}

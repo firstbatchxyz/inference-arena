@@ -1,0 +1,20 @@
+{
+  "model_name": "Gemma-2B",
+  "benchmark_type": "throughput",
+  "parameter_size": "2b",
+  "inference_engine": "Ollama",
+  "hardware": "NVIDIA RTX A5000",
+  "memory": 60,
+  "download_speed": null,
+  "server_type": "Runpod",
+  "cost": 0.013725000000000001,
+  "avg_ttft_ms": 6708.393335342407,
+  "avg_throughput": 31.85883255524662,
+  "test_duration": 173.084545,
+  "container_setup": 20,
+  "avg_input_token_per_request": 0.19103313840155944,
+  "avg_output_token_per_request": 96,
+  "total_requests": 513,
+  "model_download_time": 14,
+  "server_cost_per_hour": 0.27
+}

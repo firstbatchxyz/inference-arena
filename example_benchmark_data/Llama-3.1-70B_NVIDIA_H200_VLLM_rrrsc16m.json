@@ -1,0 +1,20 @@
+{
+  "model_name": "Llama-3.1-70B",
+  "benchmark_type": "throughput",
+  "parameter_size": "70b",
+  "inference_engine": "VLLM",
+  "hardware": "NVIDIA H200",
+  "memory": 1000,
+  "download_speed": null,
+  "server_type": "Runpod",
+  "cost": 1.7866333333333335,
+  "avg_ttft_ms": 12799.946858036903,
+  "avg_throughput": 367.4142053427229,
+  "test_duration": 384.579269,
+  "container_setup": 453,
+  "avg_input_token_per_request": 20.559815950920246,
+  "avg_output_token_per_request": 76.83870967741937,
+  "total_requests": 652,
+  "model_download_time": 453,
+  "server_cost_per_hour": 7.98
+}

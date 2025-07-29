@@ -1,0 +1,20 @@
+{
+  "model_name": "Gemma-2-27B",
+  "benchmark_type": "throughput",
+  "parameter_size": "27b",
+  "inference_engine": "Ollama",
+  "hardware": "NVIDIA H200",
+  "memory": 550,
+  "download_speed": null,
+  "server_type": "Runpod",
+  "cost": 0.2549166666666667,
+  "avg_ttft_ms": 4552.468776702881,
+  "avg_throughput": 94.28470494593451,
+  "test_duration": 173.711771,
+  "container_setup": 27,
+  "avg_input_token_per_request": 0.32490272373540857,
+  "avg_output_token_per_request": 288.5,
+  "total_requests": 514,
+  "model_download_time": 61,
+  "server_cost_per_hour": 3.99
+}

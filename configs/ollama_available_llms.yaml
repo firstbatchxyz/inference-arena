@@ -1,0 +1,42 @@
+
+
+LLMs:
+- name: "Mistral Small 3.1 – 7.3B"
+  ollama_id: "mistral:7b"
+
+- name: "Falcon 10B"
+  ollama_id: "falcon3:10b"
+
+- name: "Gemma 3 1B"
+  ollama_id: "gemma3:1b"
+
+- name: "Gemma 3 4B"
+  ollama_id: "gemma3:4b"
+
+- name: "Gemma 3 12B"
+  ollama_id: "gemma3:12b"
+
+- name: "Qwen3-14B"
+  ollama_id: "qwen3:14b"
+
+- name: "Qwen3-32B"
+  ollama_id: "qwen3:32b"
+
+- name: "Mistral Devstral – 24B"
+  ollama_id: "devstral:24b"
+
+- name: "Llama 3.1 70B"
+  ollama_id: "llama3.1:70b"
+
+- name: "Llama 3.1 405B"
+  ollama_id: "llama3.1:405b"
+
+- name: "Qwen3-235B-A22B (MoE) – 235B total / 22B active"
+  ollama_id: "qwen3:235b"
+
+- name: "DeepSeek R1 – 671B MoE / ~37B active"
+  ollama_id: "deepseek-r1:671b"
+
+- name: "Falcon 180B"
+  ollama_id: "falcon:180b"
+

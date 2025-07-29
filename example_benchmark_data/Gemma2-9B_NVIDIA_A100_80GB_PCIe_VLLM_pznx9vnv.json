@@ -1,0 +1,20 @@
+{
+  "model_name": "Gemma2-9B",
+  "benchmark_type": "throughput",
+  "parameter_size": "9b",
+  "inference_engine": "VLLM",
+  "hardware": "NVIDIA A100 80GB PCIe",
+  "memory": 300,
+  "download_speed": null,
+  "server_type": "Runpod",
+  "cost": null,
+  "avg_ttft_ms": 1882.4678262074785,
+  "avg_throughput": 1330.113334526268,
+  "test_duration": null,
+  "container_setup": 242,
+  "avg_input_token_per_request": 99.1311475409836,
+  "avg_output_token_per_request": 90.82513661202185,
+  "total_requests": 203,
+  "model_download_time": 242,
+  "server_cost_per_hour": null
+}

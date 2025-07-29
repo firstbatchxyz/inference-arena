@@ -1,0 +1,20 @@
+{
+  "model_name": "Qwen2.5-14B-Instruct",
+  "benchmark_type": "throughput",
+  "parameter_size": "14b",
+  "inference_engine": "Ollama",
+  "hardware": "NVIDIA A100 80GB PCIe",
+  "memory": 300,
+  "download_speed": null,
+  "server_type": "Runpod",
+  "cost": 0.2018111111111111,
+  "avg_ttft_ms": 17646.235466003418,
+  "avg_throughput": 68.17142549195405,
+  "test_duration": 441.391687,
+  "container_setup": 33,
+  "avg_input_token_per_request": 55.5,
+  "avg_output_token_per_request": 187,
+  "total_requests": 18,
+  "model_download_time": 25,
+  "server_cost_per_hour": 1.64
+}

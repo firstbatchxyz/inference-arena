@@ -1,0 +1,20 @@
+{
+  "model_name": "Mistral-7B",
+  "benchmark_type": "throughput",
+  "parameter_size": "7b",
+  "inference_engine": "VLLM",
+  "hardware": "NVIDIA H100 PCIe",
+  "memory": 150,
+  "download_speed": null,
+  "server_type": "Runpod",
+  "cost": 0.3452222222222222,
+  "avg_ttft_ms": 5937.449702604568,
+  "avg_throughput": 2894.911139284476,
+  "test_duration": 370.981244,
+  "container_setup": 319,
+  "avg_input_token_per_request": 67.29881035689293,
+  "avg_output_token_per_request": 71.3663101604278,
+  "total_requests": 1429,
+  "model_download_time": 319,
+  "server_cost_per_hour": 2.39
+}

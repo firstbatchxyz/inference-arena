@@ -1,0 +1,20 @@
+{
+  "model_name": "Llama-3-8B",
+  "benchmark_type": "throughput",
+  "parameter_size": "8b",
+  "inference_engine": "Ollama",
+  "hardware": "NVIDIA RTX A6000",
+  "memory": 180,
+  "download_speed": null,
+  "server_type": "Runpod",
+  "cost": 0.02844722222222222,
+  "avg_ttft_ms": 3788.6335849761963,
+  "avg_throughput": 84.4078629905644,
+  "test_duration": 171.634316,
+  "container_setup": 36,
+  "avg_input_token_per_request": null,
+  "avg_output_token_per_request": 451,
+  "total_requests": 512,
+  "model_download_time": 33,
+  "server_cost_per_hour": 0.49
+}

@@ -1,0 +1,20 @@
+{
+  "model_name": "Llama-3-8B",
+  "benchmark_type": "throughput",
+  "parameter_size": "8b",
+  "inference_engine": "SGLang",
+  "hardware": "NVIDIA L40S",
+  "memory": 200,
+  "download_speed": null,
+  "server_type": "Runpod",
+  "cost": 0.11562222222222222,
+  "avg_ttft_ms": 968.9720043288391,
+  "avg_throughput": 5154.979481325479,
+  "test_duration": 420.928962,
+  "container_setup": 315,
+  "avg_input_token_per_request": 75.20237571491421,
+  "avg_output_token_per_request": 67.72574724698478,
+  "total_requests": 2273,
+  "model_download_time": 315,
+  "server_cost_per_hour": 0.86
+}
