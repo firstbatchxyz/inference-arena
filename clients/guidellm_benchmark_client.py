@@ -1,4 +1,3 @@
-import asyncio
 import json
 import random
 import threading
@@ -19,7 +18,6 @@ from guidellm.backend.openai import (
 from guidellm.backend.response import RequestArgs
 from guidellm.benchmark import benchmark_generative_text
 from guidellm.dataset import InMemoryDatasetCreator
-from guidellm.utils.hf_transformers import check_load_processor
 
 from clients.mongo_client import Mongo
 from utils.ollama_utils import HF_TOKENIZER

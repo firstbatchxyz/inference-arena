@@ -1,7 +1,6 @@
 import logging
-from typing import Any
 
-from pymongo import InsertOne, MongoClient, UpdateOne
+from pymongo import MongoClient
 
 logger = logging.getLogger(__name__)
 
