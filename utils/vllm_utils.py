@@ -6,12 +6,13 @@ def get_compatible_vllm_image(gpu_id: str = "", model_id: str = "") -> str:
     Determine the appropriate vLLM Docker image based on CUDA compatibility and model requirements.
     RunPod typically uses CUDA 12.6, so we need to use compatible vLLM versions.
     """
-    if "glm" in model_id.lower():
+    if "gpt-oss" in model_id.lower():
         return "vllm/vllm-openai:gptoss"
     else:
         return "vllm/vllm-openai:latest"
 
-def build_vllm_docker_args(llm_id: str, port: int, vllm_config: dict) -> str:
+
+def build_vllm_docker_args(llm_id: str, port: int, gpu_count: int) -> str:
     """
     Build vLLM docker arguments based on the optimal configuration.
     """
@@ -20,10 +21,29 @@ def build_vllm_docker_args(llm_id: str, port: int, vllm_config: dict) -> str:
         f"--model {llm_id}",
         f"--port {port}",
         "--host 0.0.0.0",
+        f"--tensor-parallel-size={gpu_count}",
     ]
 
-    # Add additional arguments
-    docker_args_list.extend(vllm_config["additional_args"])
+    if "glm" in llm_id.lower():
+        docker_args_list.extend(
+            [
+                "--tool-call-parser=glm45",
+                "--reasoning-parser=glm45",
+                "--gpu-memory-utilization=0.55",
+                "--max-model-len=4096",
+                "--enforce-eager",
+            ]
+        )
+
+    elif "kimi-k2" in llm_id.lower():
+        docker_args_list.extend(
+            [
+                "--served-model-name=kimi-k2",
+                "--trust-remote-code",
+                "--enable-auto-tool-choice",
+                "--tool-call-parser=kimi_k2",
+            ]
+        )
 
     # Filter out empty strings and join all arguments into a single string
     docker_args = " ".join([arg for arg in docker_args_list if arg.strip()])
@@ -37,28 +57,22 @@ def get_vllm_environment_vars(
     """
     Get vLLM environment variables based on model and GPU configuration.
     """
-    # Enhanced environment variables for better HuggingFace integration
     env_vars = {
-        "HF_TOKEN": os.getenv("HF_TOKEN", ""),  # Primary HF token (new standard)
-        "HUGGING_FACE_HUB_TOKEN": os.getenv("HF_TOKEN", ""),  # Fallback compatibility
-        "HF_HOME": "/root/.cache/huggingface",  # Centralized HF cache
-        "TRANSFORMERS_CACHE": "/root/.cache/huggingface/transformers",  # Transformers cache
-        "HF_DATASETS_CACHE": "/root/.cache/huggingface/datasets",  # Datasets cache
+        "HF_TOKEN": os.getenv("HF_TOKEN", ""),
+        "HUGGING_FACE_HUB_TOKEN": os.getenv("HF_TOKEN", ""),
+        "HF_HOME": "/root/.cache/huggingface",
+        "TRANSFORMERS_CACHE": "/root/.cache/huggingface/transformers",
+        "HF_DATASETS_CACHE": "/root/.cache/huggingface/datasets",
     }
 
+    if "gpt-oss" in llm_id.lower():
+        env_vars["EXTRA_INDEX_URL"] = "https://wheels.vllm.ai/gpt-oss/"
+        env_vars["PYTORCH_INDEX_URL"] = "https://download.pytorch.org/whl/nightly/cu128"
+        env_vars["INDEX_STRATEGY"] = "unsafe-best-match"
+
+    elif "glm" in llm_id.lower():
+        env_vars["EXTRA_INDEX_URL"] = "https://wheels.vllm.ai/glm/"
+        env_vars["PYTORCH_INDEX_URL"] = "https://download.pytorch.org/whl/nightly/cu128"
+        env_vars["INDEX_STRATEGY"] = "unsafe-best-match"
 
     return env_vars
-
-
-def get_optimal_vllm_config(
-    llm_id: str, llm_parameter_size: str = "", gpu_id: str = ""
-) -> dict:
-    """
-    """
-    config = {
-        "gpu_memory_utilization": 0.85,
-        "dtype": "auto",
-        "additional_args": [],
-    }
-
-    return config

@@ -3,8 +3,8 @@ import time
 
 import requests
 
-# Model name mappings from Ollama to HuggingFace
-OLLAMA_TO_HF_TOKENIZER = {
+HF_TOKENIZER = {
+    # Ollama to HuggingFace Tokenizer mappings for model names mapping
     "llama3.1:70b": "meta-llama/Meta-Llama-3.1-70B",
     "llama3.1:8b": "meta-llama/Meta-Llama-3.1-8B",
     "llama3:70b": "meta-llama/Meta-Llama-3-70B",
@@ -25,8 +25,8 @@ OLLAMA_TO_HF_TOKENIZER = {
     "lmsys/gpt-oss-120b-bf16": "lmsys/gpt-oss-120b-bf16",
     "lmsys/gpt-oss-20b-bf16": "lmsys/gpt-oss-20b-bf16",
     "qwen3:235b": "Qwen/Qwen3-235B-A22B",
-    "zai-org/GLM-4.5-Air-FP8": "zai-org/GLM-4.5-Air-FP8"
 }
+
 
 # Configuration constants
 MAX_RETRIES = 120  # 10 minutes max wait time
@@ -57,13 +57,15 @@ def get_ollama_environment_vars(gpu_count: int) -> dict[str, str]:
 
     # Add multi-GPU specific settings
     if gpu_count > 1:
-        env_vars.update({
-            "NCCL_DEBUG": "INFO",
-            "NCCL_IB_DISABLE": "1",
-            "NCCL_P2P_DISABLE": "1",
-            "PYTHONUNBUFFERED": "1",
-            "TORCH_NCCL_BLOCKING_WAIT": "1",
-        })
+        env_vars.update(
+            {
+                "NCCL_DEBUG": "INFO",
+                "NCCL_IB_DISABLE": "1",
+                "NCCL_P2P_DISABLE": "1",
+                "PYTHONUNBUFFERED": "1",
+                "TORCH_NCCL_BLOCKING_WAIT": "1",
+            }
+        )
 
     return env_vars
 
@@ -141,9 +143,7 @@ def pull_model(pod_url: str, llm_id: str) -> bool:
     """
     try:
         with requests.post(
-            f"{pod_url}/api/pull",
-            json={"model": llm_id},
-            stream=True
+            f"{pod_url}/api/pull", json={"model": llm_id}, stream=True
         ) as response:
             if response.status_code != 200:
                 # Retry the pull once on failure
@@ -171,5 +171,3 @@ def pull_model(pod_url: str, llm_id: str) -> bool:
         return False
 
     return False
-
-

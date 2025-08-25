@@ -21,30 +21,6 @@ The web platform provides:
 - Community discussions and comments
 - AI-powered recommendations
 
-## 🏗️ Architecture
-
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   FastAPI       │    │   MongoDB        │    │   RunPod        │
-│   Backend       │◄──►│   Database       │    │   GPU Cloud     │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   AI Assistant  │    │   Price Scraper  │    │   Benchmark     │
-│   (OpenAI)      │    │   (Multi-Platform)│    │   Runners       │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-```
-
-## ✨ Key Features
-
-- **Multi-Engine Benchmarking**: Compare Ollama, vLLM, and SGLang performance
-- **Cloud GPU Integration**: Automated RunPod provisioning and management
-- **Real-time GPU Pricing**: Track pricing across multiple cloud providers
-- **AI-Powered Analysis**: Chat assistant for benchmark insights and recommendations
-- **Community Platform**: Comments, upvotes, and collaborative discussions
-- **Cost Optimization**: Intelligent GPU selection and cost estimation
-
 ## 📊 Benchmarking Methodology
 
 ### Overview
@@ -75,11 +51,11 @@ We use an extended version of GuideLLM (customized for different inference engin
 
 ### Benchmark Process
 
-For each benchmark, we create **10 different benchmarks**:
+For each benchmark, we create **7 different benchmarks**:
 1. **1 Throughput benchmark** (maximum capacity test)
-2. **9 Concurrent benchmarks** (rates 1-9)
+2. **6 Concurrent benchmarks** (rates 1-6)
 
-All 10 benchmarks are recorded and displayed to users for comprehensive performance analysis.
+All 7 benchmarks are recorded and displayed to users for comprehensive performance analysis.
 
 ## 📈 Example Benchmark Data
 
@@ -107,100 +83,56 @@ Here's an example of the benchmark data structure and metrics collected:
 - **tokens_per_second**: Total tokens (input + output) processed per second
 - **request_concurrency**: Average number of concurrent requests during the test
 
-## 🚀 Quick Start
+## Installation
 
-### Prerequisites
-- Python 3.8+
-- MongoDB
-- RunPod account and API key
-- HuggingFace token (for model access)
+We use `uv` for the Benchmark. Sync your environment via:
 
-### Installation
+```sh
+uv sync
+```
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd dkn-benchmark-api
-   ```
+## Usage
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+To run the Benchmark, use the following command:
 
-3. Set up environment variables:
-   ```bash
-   export MONGODB_URL="your_mongodb_connection_string"
-   export RUNPOD_API_KEY="your_runpod_api_key"
-   export HF_TOKEN="your_huggingface_token"
-   export OPENAI_API_KEY="your_openai_api_key"
-   ```
+First set the enviroments
 
-4. Run a benchmark:
-   ```bash
-   # Ollama benchmark
-   python benchmark/run_ollama_benchmark_with_runpod.py \
-     --gpu_id "NVIDIA H200" \
-     --volume_in_gb 100 \
-     --container_disk_in_gb 50 \
-     --llm_id "llama2:7b" \
-     --llm_parameter_size "7b" \
-     --llm_common_name "Llama2-7B"
-   
-   # vLLM benchmark
-   python benchmark/run_vllm_benchmark_with_runpod.py \
-     --gpu_id "NVIDIA H200" \
-     --volume_in_gb 100 \
-     --container_disk_in_gb 50 \
-     --llm_id "meta-llama/Llama-2-7b-chat-hf" \
-     --llm_parameter_size "7b" \
-     --llm_common_name "Llama2-7B"
-   
-   # SGLang benchmark
-   python benchmark/run_sglang_benchmark_with_runpod.py \
-     --gpu_id "NVIDIA H200" \
-     --volume_in_gb 100 \
-     --container_disk_in_gb 50 \
-     --llm_id "meta-llama/Llama-2-7b-chat-hf" \
-     --llm_parameter_size "7b" \
-     --llm_common_name "Llama2-7B"
-   ```
+### Enviroments
+- `MONGODB_URL`: `"mongodb://<username>:<password>@<host>:<port>/<database>?options"` — URL that contains benchmark and API utilities.
+- `HF_TOKEN`: `"123123"` — Client ID from Huggingface - due to access private models
+- `RUNPOD_API_KEY`: `"sk_12321313"` — Runpod API key for create and manage pod.
+
+After creating .env file with these variables you should run 
+
+```sh
+uv run --env-file=.env python runner.py --inference_engine ollama \
+  --gpu_id "NVIDIA H200" \
+  --volume_in_gb 1000 \
+  --container_disk_in_gb 500 \
+  --llm_id "qwen2:7b" \
+  --llm_parameter_size "7b" \
+  --llm_common_name "Qwen2 7b" \
+  --gpu_count 1
+```
+For Sglang and VLLM you need to give HF model path as llm_id
+
+```sh
+uv run --env-file=.env python runner.py --inference_engine vllm \
+  --gpu_id "NVIDIA H200" \
+  --volume_in_gb 1000 \
+  --container_disk_in_gb 500 \
+  --llm_id "Qwen/Qwen2-7B" \
+  --llm_parameter_size "7b" \
+  --llm_common_name "Qwen2 7b" \
+  --gpu_count 1
+```
+
+
+
 
 ## 🔧 Supported Configurations
 
-### Models (42 Available)
-| Model Family | Variants | Parameter Sizes |
-|-------------|----------|-----------------|
-| **Llama 3.1** | Instruct | 70B, 405B |
-| **Qwen 3** | Base | 14B, 32B, 235B (MoE) |
-| **Gemma 3** | Base | 1B, 4B, 12B |
-| **Mistral** | Small, Devstral | 7.3B, 24B |
-| **Falcon** | Base | 10B, 180B |
-| **DeepSeek R1** | MoE | 671B (~37B active) |
-
-### GPU Hardware (42 Supported)
-| Category | Examples | Memory Range |
-|----------|----------|--------------|
-| **Data Center** | H100, H200, A100, B200 | 40GB - 192GB |
-| **Consumer** | RTX 5090, 4090, 3090 | 12GB - 24GB |
-| **Workstation** | RTX 6000 Ada, A6000 | 24GB - 48GB |
-
-### Inference Engines
-| Engine | Docker Image | API Endpoint | Port | Special Features |
-|--------|--------------|--------------|------|------------------|
-| **Ollama** | `ollama/ollama:latest` | `/api/generate` | 11434 | Flash attention, GPU overhead control |
-| **vLLM** | `vllm/vllm-openai:v0.6.0` | `/v1/completions` | 8000 | CUDA optimization, tensor parallelism |
-| **SGLang** | `lmsysorg/sglang:latest` | `/v1/completions` | 30000 | Multi-GPU support, KV cache optimization |
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes and add tests
-4. Commit: `git commit -m 'Add amazing feature'`
-5. Push: `git push origin feature/amazing-feature`
-6. Open a Pull Request
-
+Will be added soon <>
 
 ## 🔗 Related Links
 

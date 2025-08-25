@@ -10,11 +10,10 @@ logger = logging.getLogger(__name__)
 
 class RunpodClient:
     """
-    Simple GraphQL client for RunPod with connection pooling and retry logic.
+    Simple GraphQL client for RunPod with connection pooling and retry logic. Used for getting pod info and calculating used balance due to Runpod SDK limitations.
     """
 
     def __init__(self, api_key=None):
-        # GraphQL endpoint and auth header
         self.endpoint = "https://api.runpod.io/graphql"
         self.api_key = api_key or os.getenv("RUNPOD_API_KEY")
         self.headers = {
@@ -79,9 +78,7 @@ class RunpodClient:
             runtime { uptimeInSeconds }
           }
         }"""
-        return self._post(query, {"input": {"podId": pod_id}})[
-            "pod"
-        ]  # :contentReference[oaicite:6]{index=6}
+        return self._post(query, {"input": {"podId": pod_id}})["pod"]
 
     def calculate_used_balance(self, pod_id: str) -> dict:
         """
@@ -93,7 +90,7 @@ class RunpodClient:
         uptime = pod.get("runtime", {}).get("uptimeInSeconds") or pod.get(
             "uptimeSeconds", 0
         )
-        hours = uptime / 3600  # seconds → hours :contentReference[oaicite:7]{index=7}
+        hours = uptime / 3600
         cost = float(pod["costPerHr"])
         used_balance = hours * cost
         return {
@@ -104,7 +101,6 @@ class RunpodClient:
         }
 
     def close(self):
-        """Close the session to clean up connections."""
         if hasattr(self, "session"):
             self.session.close()
 

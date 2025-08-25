@@ -236,7 +236,6 @@ auth.yml
 
 # Environment variables and secrets
 .env*
-!.env.example
 !.env.template
 !.env.sample
 secrets/
@@ -583,3 +582,6 @@ README.tokens.md
 !*sample*
 !*template*
 !*demo* 
+
+# Ignore personal playground files
+run_missing_benchmark.py

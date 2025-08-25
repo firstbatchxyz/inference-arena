@@ -6,10 +6,12 @@ from .guidellm_benchmark_client import (
     MongoDatasetLoader,
 )
 from .mongo_client import Mongo
+from .runpod_client import RunpodClient
 
 __all__ = [
     "GuideLLMBenchmarkClient",
     "CustomOpenAIBackend",
     "MongoDatasetLoader",
     "Mongo",
+    "RunpodClient",
 ]

@@ -1,4 +1,5 @@
 import asyncio
+import json
 import random
 import threading
 import time
@@ -15,14 +16,13 @@ from guidellm.backend.openai import (
     ResponseSummary,
     StreamingTextResponse,
 )
+from guidellm.backend.response import RequestArgs
 from guidellm.benchmark import benchmark_generative_text
 from guidellm.dataset import InMemoryDatasetCreator
+from guidellm.utils.hf_transformers import check_load_processor
 
-# Import local mongo client
 from clients.mongo_client import Mongo
-
-# Import tokenizer mappings
-from utils.ollama_utils import OLLAMA_TO_HF_TOKENIZER
+from utils.ollama_utils import HF_TOKENIZER
 
 
 class CustomOpenAIBackend(OpenAIHTTPBackend):
@@ -52,13 +52,10 @@ class CustomOpenAIBackend(OpenAIHTTPBackend):
             max_output_tokens=max_output_tokens,
         )
 
-        # Override default paths if provided
         self._text_completions_path = text_completions_path or "/v1/completions"
         self._chat_completions_path = chat_completions_path or "/v1/chat/completions"
 
     def _extract_ollama_delta_content(self, data: dict) -> str | None:
-        """Extract streaming delta content from Ollama response format."""
-        # Ollama uses "response" field for streaming content
         return data.get("response", "")
 
     async def _iterative_completions_request(
@@ -68,38 +65,30 @@ class CustomOpenAIBackend(OpenAIHTTPBackend):
         request_prompt_tokens: int | None,
         request_output_tokens: int | None,
         headers: dict,
-        params: dict,
         payload: dict,
+        params: dict | None = None,
     ) -> AsyncGenerator[StreamingTextResponse | ResponseSummary, None]:
-        # Import necessary modules for the implementation
-        import json
-        import time
+        if params is None:
+            params = {}
 
-        from guidellm.backend.response import RequestArgs
-
-        # Use custom paths
+        # Use custom paths for requests
         if type_ == "text_completions":
             target = f"{self.target}{self._text_completions_path}"
         elif type_ == "chat_completions":
             target = f"{self.target}{self._chat_completions_path}"
-        else:
-            raise ValueError(f"Unsupported type: {type_}")
-
-        # Ensure streaming is enabled in the payload
-        payload = payload.copy()  # Don't modify the original
+        payload = payload.copy()
         payload["stream"] = True
 
-        # Remove unsupported parameters for vLLM compatibility
+        # Remove unsupported parameters for SGlang,Vllm and Ollama
         unsupported_params = ["stream_options", "max_completion_tokens", "ignore_eos"]
         for param in unsupported_params:
             payload.pop(param, None)
 
-        # For Ollama compatibility, ensure we have required fields
         if type_ == "text_completions" and "prompt" not in payload:
-            # Convert messages to prompt for text completions
             if "messages" in payload:
                 payload["prompt"] = payload.pop("messages")[-1].get("content", "")
 
+        # Set Variables for measuring performance
         response_value = ""
         response_prompt_count: int | None = None
         response_output_count: int | None = None
@@ -232,12 +221,12 @@ class CustomOpenAIBackend(OpenAIHTTPBackend):
         )
 
 
-# Register the custom backend
+# Register the custom backend for guidellm
 Backend._registry["custom_openai"] = CustomOpenAIBackend
 
 
 class MongoDatasetLoader:
-    """Load prompts from MongoDB and convert to guidellm dataset"""
+    """For loading prompts from MongoDB and converting to guidellm dataset"""
 
     def __init__(
         self,
@@ -252,7 +241,6 @@ class MongoDatasetLoader:
     def load_prompts(
         self, query: dict | None = None, limit: int | None = None
     ) -> list[dict]:
-        """Load prompts from MongoDB"""
         query = query or {}
         cursor = self.mongo.find_many(self.collection_name, query)
 
@@ -270,7 +258,6 @@ class MongoDatasetLoader:
     def create_dataset(
         self, query: dict | None = None, limit: int | None = None
     ) -> Dataset:
-        """Create a Hugging Face Dataset from MongoDB prompts"""
         prompts = self.load_prompts(query, limit)
         if not prompts:
             raise ValueError("No prompts found in MongoDB")
@@ -294,14 +281,10 @@ class GuideLLMBenchmarkClient:
     - MongoDB integration for loading prompts
     - Exponential backoff retry mechanisms
     - Connection timeout handling
-    - Graceful failure recovery
-    - Detailed logging and monitoring
-    - Health check capabilities
-    - Benchmark suite execution
     """
 
     # Add tokenizer mapping as class attribute
-    OLLAMA_TO_HF_TOKENIZER = OLLAMA_TO_HF_TOKENIZER
+    HF_TOKENIZER = HF_TOKENIZER
 
     def __init__(
         self,
@@ -320,21 +303,19 @@ class GuideLLMBenchmarkClient:
         health_check_timeout: float = 30.0,
     ):
         """
-        Initialize benchmark client with custom configuration and retry mechanisms.
-        Args:
-            base_url: Base URL of the model server
-            model: Model name/identifier
-            mongo_url: MongoDB connection URL
-            text_completions_path: Path for text completions endpoint
-            chat_completions_path: Path for chat completions endpoint
-            api_key: Optional API key
-            max_output_tokens: Maximum output tokens
-            processor: Custom processor/tokenizer
-            max_retries: Maximum number of retry attempts
-            base_delay: Base delay for exponential backoff (seconds)
-            max_delay: Maximum delay between retries (seconds)
-            timeout: Request timeout (seconds)
-            health_check_timeout: Health check timeout (seconds)
+        base_url: Base URL of the model server
+        model: Model name/identifier
+        mongo_url: MongoDB connection URL
+        text_completions_path: Path for text completions endpoint
+        chat_completions_path: Path for chat completions endpoint
+        api_key: Optional API key
+        max_output_tokens: Maximum output tokens
+        processor: Custom processor/tokenizer
+        max_retries: Maximum number of retry attempts
+        base_delay: Base delay for exponential backoff (seconds)
+        max_delay: Maximum delay between retries (seconds)
+        timeout: Request timeout (seconds)
+        health_check_timeout: Health check timeout (seconds)
         """
         self.base_url = base_url
         self.model = model
@@ -343,31 +324,29 @@ class GuideLLMBenchmarkClient:
         self.chat_completions_path = chat_completions_path or "/v1/chat/completions"
         self.api_key = api_key
         self.max_output_tokens = max_output_tokens
-        self.processor = processor  # Store custom processor
+        # Map Ollama model to HF tokenizer if model name contains ":" else use model name for VLLM and SGlang
+        self.processor = HF_TOKENIZER[model] if ":" in model else model
 
-        # Retry and timeout configuration
         self.max_retries = max_retries
         self.base_delay = base_delay
         self.max_delay = max_delay
         self.timeout = timeout
         self.health_check_timeout = health_check_timeout
 
-        # Initialize MongoDB loader if URL provided
         self.mongo_loader = MongoDatasetLoader(mongo_url) if mongo_url else None
         self.mongo_client = Mongo(mongo_url) if mongo_url else None
 
     def _calculate_backoff_delay(self, attempt: int) -> float:
-        """Calculate exponential backoff delay with jitter."""
         delay = min(self.base_delay * (2**attempt), self.max_delay)
-        # Add jitter (±25%)
         jitter = delay * 0.25 * (2 * random.random() - 1)
         return max(0.1, delay + jitter)
 
     @contextmanager
     def _timeout_context(self, timeout: float):
-        """Context manager for operation timeouts."""
+        """To calculate timer on timeout"""
 
         def timeout_handler():
+            # We don't do anything here RN.
             pass
 
         timer = threading.Timer(timeout, timeout_handler)
@@ -378,12 +357,8 @@ class GuideLLMBenchmarkClient:
             timer.cancel()
 
     def health_check(self) -> dict[str, Any]:
-        """
-        Perform comprehensive health check on the model server.
+        """To check if the model server is healthy"""
 
-        Returns:
-            Dict with health status, response time, and server info
-        """
         health_status = {
             "healthy": False,
             "response_time_ms": None,
@@ -396,7 +371,7 @@ class GuideLLMBenchmarkClient:
             with self._timeout_context(self.health_check_timeout):
                 start_time = time.time()
 
-                # Try to get model list
+                # Try to get model list from server to check server and model availability
                 response = httpx.get(
                     f"{self.base_url}/v1/models", timeout=self.health_check_timeout
                 )
@@ -440,43 +415,13 @@ class GuideLLMBenchmarkClient:
 
         return health_status
 
-    def wait_for_server_ready(
-        self, max_wait_time: float = 600.0, check_interval: float = 10.0
-    ) -> bool:
-        """
-        Wait for server to be ready with exponential backoff.
-
-        Args:
-            max_wait_time: Maximum time to wait (seconds)
-            check_interval: Initial interval between checks (seconds)
-
-        Returns:
-            True if server becomes ready, False if timeout
-        """
-        start_time = time.time()
-        attempt = 0
-
-        while time.time() - start_time < max_wait_time:
-            health = self.health_check()
-
-            if health["healthy"]:
-                return True
-
-            # Calculate next check interval with backoff
-            wait_time = min(check_interval * (1.5**attempt), 60.0)
-
-            time.sleep(wait_time)
-            attempt += 1
-
-        return False
-
     async def run_benchmark(
         self,
         data: str | Path | list | None = None,
         mongo_query: dict | None = None,
         mongo_limit: int | None = None,
         rate_type: str = "synchronous",
-        rate: int | float | list | None = None,
+        rate: float | None = None,
         max_seconds: float | None = None,
         max_requests: int | None = None,
         warmup_percent: float | None = 0.1,
@@ -484,11 +429,7 @@ class GuideLLMBenchmarkClient:
         show_progress: bool = True,
         disable_token_counting: bool = False,
     ):
-        """Run benchmark with custom configuration
-
-        Args:
-            disable_token_counting: If True, disables token counting (useful for non-HF models)
-        """
+        """Run benchmark with custom configuration"""
 
         # Prepare data
         if self.mongo_loader and (mongo_query is not None or data is None):
@@ -496,7 +437,7 @@ class GuideLLMBenchmarkClient:
             dataset = self.mongo_loader.create_dataset(mongo_query, mongo_limit)
             data_source = dataset
         else:
-            # Use provided data
+            # Use provided data without mongo
             data_source = data or []
 
         # Create backend arguments
@@ -507,32 +448,15 @@ class GuideLLMBenchmarkClient:
             "max_output_tokens": self.max_output_tokens,
         }
 
-        # Determine processor/tokenizer
+        # Determine processor/tokenizer if sent it true then disable token counting
         if disable_token_counting:
             processor = None
-        elif self.processor:
-            # Use custom processor if provided
-            processor = self.processor
-        elif self.model in self.OLLAMA_TO_HF_TOKENIZER:
-            # Map Ollama model to HF tokenizer
-            processor = self.OLLAMA_TO_HF_TOKENIZER[self.model]
         else:
-            # Default to None to avoid errors with unknown models
-            processor = None
+            processor = self.processor
 
-        # Test tokenizer loading if one is specified
-        if processor and not disable_token_counting:
-            try:
-                from guidellm.utils.hf_transformers import check_load_processor
-
-                # Test load the processor to ensure it works
-                check_load_processor(
-                    processor,
-                    processor_args=None,
-                    error_msg="Testing tokenizer availability",
-                )
-            except Exception:
-                processor = None
+        # Handle rate type
+        if isinstance(rate, int):
+            rate = float(rate)
 
         # Run benchmark
         report, saved_path = await benchmark_generative_text(
@@ -562,189 +486,9 @@ class GuideLLMBenchmarkClient:
 
         return report, saved_path
 
-    def run_sync(self, **kwargs):
-        """Synchronous wrapper for run_benchmark"""
-        return asyncio.run(self.run_benchmark(**kwargs))
-
-    def run_sync_with_retry(
-        self,
-        max_seconds: int | None = None,
-        mongo_query: dict | None = None,
-        rate_type: str = "concurrent",
-        output_path: str = "benchmark_results.json",
-        rate: int | None = None,
-        **kwargs,
-    ) -> tuple:
-        """
-        Run benchmark with retry mechanism and error handling.
-
-        Returns:
-            Tuple of (report, path) or (None, None) if all retries fail
-        """
-        last_exception = None
-
-        for attempt in range(self.max_retries + 1):
-            try:
-
-                # Health check before running benchmark
-                if not self.health_check()["healthy"]:
-                    raise RuntimeError("Server health check failed before benchmark")
-
-                # Run the actual benchmark
-                result = self.run_sync(
-                    max_seconds=max_seconds,
-                    mongo_query=mongo_query or {},
-                    rate_type=rate_type,
-                    output_path=output_path,
-                    rate=rate,
-                    **kwargs,
-                )
-
-                return result
-
-            except Exception as e:
-                last_exception = e
-
-                # Log the failure to database
-                self._log_benchmark_failure(attempt + 1, str(e))
-
-                # Don't retry on the last attempt
-                if attempt < self.max_retries:
-                    delay = self._calculate_backoff_delay(attempt)
-                    time.sleep(delay)
-
-        # Log final failure
-        self._log_benchmark_final_failure(str(last_exception))
-        return None, None
-
-    def run_benchmark_suite(
-        self,
-        pod_id: str,
-        concurrent_rates: list[int] = None,
-        include_throughput: bool = True,
-        max_seconds_per_test: int = 30,
-    ) -> dict[str, Any]:
-        """
-        Run a complete benchmark suite with error handling.
-
-        Args:
-            pod_id: Pod identifier for logging
-            concurrent_rates: List of concurrent rates to test
-            include_throughput: Whether to include throughput test
-            max_seconds_per_test: Maximum seconds per individual test
-
-        Returns:
-            Dict with benchmark results and statistics
-        """
-        if concurrent_rates is None:
-            concurrent_rates = list(range(1, 10))  # Default: 1-9 concurrent requests
-
-        suite_results = {
-            "pod_id": pod_id,
-            "start_time": time.time(),
-            "concurrent_results": [],
-            "throughput_result": None,
-            "failures": [],
-            "total_tests": len(concurrent_rates) + (1 if include_throughput else 0),
-            "successful_tests": 0,
-            "error_summary": {},
-        }
-
-        # Test concurrent rates
-        for rate in concurrent_rates:
-
-            try:
-                report, path = self.run_sync_with_retry(
-                    max_seconds=max_seconds_per_test,
-                    rate_type="concurrent",
-                    rate=rate,
-                    output_path=f"benchmark_results_concurrent_{rate}.json",
-                )
-
-                if report and report.benchmarks:
-                    benchmark_report = report.benchmarks[0]
-
-                    result_data = self._extract_benchmark_metrics(
-                        benchmark_report, pod_id, rate
-                    )
-                    suite_results["concurrent_results"].append(result_data)
-                    suite_results["successful_tests"] += 1
-
-                    # Log to database
-                    if self.mongo_client:
-                        self.mongo_client.insert_one("benchmark_results", result_data)
-
-                else:
-                    suite_results["failures"].append(
-                        {
-                            "test_type": "concurrent",
-                            "rate": rate,
-                            "error": "No benchmark results returned",
-                        }
-                    )
-
-            except Exception as e:
-                error_msg = str(e)
-                suite_results["failures"].append(
-                    {"test_type": "concurrent", "rate": rate, "error": error_msg}
-                )
-                self._track_error_type(suite_results["error_summary"], error_msg)
-
-            # Brief pause between tests
-            time.sleep(2)
-
-        # Test throughput
-        if include_throughput:
-
-            try:
-                report, path = self.run_sync_with_retry(
-                    max_seconds=max_seconds_per_test,
-                    rate_type="throughput",
-                    output_path="benchmark_results_throughput.json",
-                )
-
-                if report and report.benchmarks:
-                    benchmark_report = report.benchmarks[0]
-
-                    result_data = self._extract_benchmark_metrics(
-                        benchmark_report, pod_id, None, "throughput"
-                    )
-                    suite_results["throughput_result"] = result_data
-                    suite_results["successful_tests"] += 1
-
-                    # Log to database
-                    if self.mongo_client:
-                        self.mongo_client.insert_one("benchmark_results", result_data)
-
-                else:
-                    suite_results["failures"].append(
-                        {
-                            "test_type": "throughput",
-                            "error": "No benchmark results returned",
-                        }
-                    )
-
-            except Exception as e:
-                error_msg = str(e)
-                suite_results["failures"].append(
-                    {"test_type": "throughput", "error": error_msg}
-                )
-                self._track_error_type(suite_results["error_summary"], error_msg)
-
-        suite_results["end_time"] = time.time()
-        suite_results["total_duration"] = (
-            suite_results["end_time"] - suite_results["start_time"]
-        )
-        suite_results["success_rate"] = (
-            suite_results["successful_tests"] / suite_results["total_tests"]
-        )
-
-        return suite_results
-
     def _extract_benchmark_metrics(
         self, benchmark_report, pod_id: str, rate: int | None, test_type: str = None
     ) -> dict:
-        """Extract metrics from benchmark report."""
         result = {
             "pod_id": pod_id,
             "benchmark_type": test_type or benchmark_report.args.profile.type_,
@@ -768,68 +512,19 @@ class GuideLLMBenchmarkClient:
         }
 
         # Calculate benchmark duration if available
-        if benchmark_report.run_stats.end_time and benchmark_report.run_stats.start_time:
+        if (
+            benchmark_report.run_stats.end_time
+            and benchmark_report.run_stats.start_time
+        ):
             result["benchmark_duration"] = (
-                benchmark_report.run_stats.end_time - benchmark_report.run_stats.start_time
+                benchmark_report.run_stats.end_time
+                - benchmark_report.run_stats.start_time
             )
 
         # Handle rate extraction for profile types
         if not rate and self.mongo_client:
-            result["rate"] = self.mongo_client.safe_get_metric(
+            result["rate"] = self.mongo_client.get_metric(
                 benchmark_report.args.profile, "streams[0]"
             )
 
         return result
-
-    def _log_benchmark_failure(self, attempt: int, error: str):
-        """Log individual benchmark failure to database."""
-        if not self.mongo_client:
-            return
-
-        try:
-            self.mongo_client.insert_one(
-                "benchmark_failures",
-                {
-                    "base_url": self.base_url,
-                    "model": self.model,
-                    "attempt": attempt,
-                    "error": error,
-                    "timestamp": time.time(),
-                },
-            )
-        except Exception:
-            pass
-
-    def _log_benchmark_final_failure(self, error: str):
-        """Log final benchmark failure after all retries."""
-        if not self.mongo_client:
-            return
-
-        try:
-            self.mongo_client.insert_one(
-                "benchmark_final_failures",
-                {
-                    "base_url": self.base_url,
-                    "model": self.model,
-                    "final_error": error,
-                    "max_retries": self.max_retries,
-                    "timestamp": time.time(),
-                },
-            )
-        except Exception:
-            pass
-
-    def _track_error_type(self, error_summary: dict, error_msg: str):
-        """Track error types for analysis."""
-        error_type = "unknown"
-
-        if "timeout" in error_msg.lower():
-            error_type = "timeout"
-        elif "connection" in error_msg.lower():
-            error_type = "connection"
-        elif "server" in error_msg.lower():
-            error_type = "server_error"
-        elif "memory" in error_msg.lower():
-            error_type = "memory_error"
-
-        error_summary[error_type] = error_summary.get(error_type, 0) + 1
