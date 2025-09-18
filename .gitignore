@@ -233,7 +233,7 @@ auth.yml
 *.secret.json
 *.secret.yaml
 *.secret.yml
-
+lightning_ai_playground.py
 # Environment variables and secrets
 .env*
 !.env.template

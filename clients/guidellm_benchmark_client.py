@@ -20,7 +20,7 @@ from guidellm.benchmark import benchmark_generative_text
 from guidellm.dataset import InMemoryDatasetCreator
 
 from clients.mongo_client import Mongo
-from utils.ollama_utils import HF_TOKENIZER
+from utils.tokenizer_utils import HF_TOKENIZER
 
 
 class CustomOpenAIBackend(OpenAIHTTPBackend):
@@ -322,8 +322,11 @@ class GuideLLMBenchmarkClient:
         self.chat_completions_path = chat_completions_path or "/v1/chat/completions"
         self.api_key = api_key
         self.max_output_tokens = max_output_tokens
-        # Map Ollama model to HF tokenizer if model name contains ":" else use model name for VLLM and SGlang
-        self.processor = HF_TOKENIZER[model] if ":" in model else model
+        # Use passed processor if provided, otherwise map Ollama model to HF tokenizer if model name contains ":" else use model name for VLLM and SGlang
+        if processor is not None:
+            self.processor = processor
+        else:
+            self.processor = HF_TOKENIZER[model] if ":" in model else model
 
         self.max_retries = max_retries
         self.base_delay = base_delay
@@ -369,34 +372,76 @@ class GuideLLMBenchmarkClient:
             with self._timeout_context(self.health_check_timeout):
                 start_time = time.time()
 
-                # Try to get model list from server to check server and model availability
-                response = httpx.get(
-                    f"{self.base_url}/v1/models", timeout=self.health_check_timeout
-                )
+                # Determine if this is an Ollama server based on the text_completions_path
+                is_ollama = self.text_completions_path == "/api/generate"
+
+                # Use appropriate endpoint based on server type
+                if is_ollama:
+                    # For Ollama, use /api/tags endpoint
+                    response = httpx.get(
+                        f"{self.base_url}/api/tags", timeout=self.health_check_timeout
+                    )
+                else:
+                    # For vLLM/SGLang, use OpenAI-compatible /v1/models endpoint
+                    response = httpx.get(
+                        f"{self.base_url}/v1/models", timeout=self.health_check_timeout
+                    )
 
                 response_time = (time.time() - start_time) * 1000
                 health_status["response_time_ms"] = response_time
 
                 if response.status_code == 200:
                     data = response.json()
-                    if "data" in data and len(data["data"]) > 0:
-                        model_found = any(
-                            model.get("id") == self.model for model in data["data"]
-                        )
 
-                        if model_found:
-                            health_status["healthy"] = True
-                            health_status["server_info"] = {
-                                "available_models": [m.get("id") for m in data["data"]],
-                                "target_model": self.model,
-                                "response_code": response.status_code,
-                            }
-                        else:
-                            health_status["error"] = (
-                                f"Model {self.model} not found in available models"
+                    if is_ollama:
+                        # Handle Ollama response format
+                        if "models" in data and len(data["models"]) > 0:
+                            model_found = any(
+                                model.get("name") == self.model
+                                or model.get("model") == self.model
+                                for model in data["models"]
                             )
+
+                            if model_found:
+                                health_status["healthy"] = True
+                                health_status["server_info"] = {
+                                    "available_models": [
+                                        m.get("name", m.get("model"))
+                                        for m in data["models"]
+                                    ],
+                                    "target_model": self.model,
+                                    "response_code": response.status_code,
+                                    "server_type": "Ollama",
+                                }
+                            else:
+                                health_status["error"] = (
+                                    f"Model {self.model} not found in available models"
+                                )
+                        else:
+                            health_status["error"] = "No models available on server"
                     else:
-                        health_status["error"] = "No models available on server"
+                        # Handle OpenAI/vLLM/SGLang response format
+                        if "data" in data and len(data["data"]) > 0:
+                            model_found = any(
+                                model.get("id") == self.model for model in data["data"]
+                            )
+
+                            if model_found:
+                                health_status["healthy"] = True
+                                health_status["server_info"] = {
+                                    "available_models": [
+                                        m.get("id") for m in data["data"]
+                                    ],
+                                    "target_model": self.model,
+                                    "response_code": response.status_code,
+                                    "server_type": "vLLM/SGLang",
+                                }
+                            else:
+                                health_status["error"] = (
+                                    f"Model {self.model} not found in available models"
+                                )
+                        else:
+                            health_status["error"] = "No models available on server"
                 else:
                     health_status["error"] = (
                         f"Server returned status {response.status_code}"

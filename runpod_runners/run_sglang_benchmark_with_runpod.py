@@ -6,7 +6,7 @@ import requests
 import runpod
 
 from clients import GuideLLMBenchmarkClient, Mongo, RunpodClient
-from utils.ollama_utils import HF_TOKENIZER
+from utils.tokenizer_utils import HF_TOKENIZER
 from utils.sglang_utils import (
     build_sglang_docker_args,
     get_compatible_sglang_image,
@@ -35,7 +35,7 @@ async def create_sglang_pod(
     runpod_graphql_client = RunpodClient(api_key=os.getenv("RUNPOD_API_KEY"))
 
     # Build docker args dynamically based on optimal configuration
-    docker_args = build_sglang_docker_args(llm_id, port)
+    docker_args = build_sglang_docker_args(llm_id, port, gpu_count)
 
     time_before_pod_creation = datetime.datetime.now()
 
@@ -185,5 +185,5 @@ async def create_sglang_pod(
     )
 
     # Stop the pod
-    runpod.terminate_pod(pod_id)
+    # runpod.terminate_pod(pod_id)
     print(f"Pod {pod_id} terminated successfully")

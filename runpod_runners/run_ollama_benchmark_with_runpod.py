@@ -7,11 +7,11 @@ import runpod
 
 from clients import GuideLLMBenchmarkClient, Mongo, RunpodClient
 from utils.ollama_utils import (
-    HF_TOKENIZER,
     get_ollama_environment_vars,
     pull_model,
     verify_model_availability,
 )
+from utils.tokenizer_utils import HF_TOKENIZER
 
 
 async def create_ollama_pod(

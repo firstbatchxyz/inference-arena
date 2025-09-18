@@ -3,30 +3,6 @@ import time
 
 import requests
 
-HF_TOKENIZER = {
-    # Ollama to HuggingFace Tokenizer mappings for model names mapping
-    "llama3.1:70b": "meta-llama/Meta-Llama-3.1-70B",
-    "llama3.1:8b": "meta-llama/Meta-Llama-3.1-8B",
-    "llama3:70b": "meta-llama/Meta-Llama-3-70B",
-    "llama3:8b": "meta-llama/Meta-Llama-3-8B",
-    "llama2:70b": "meta-llama/Llama-2-70b-hf",
-    "llama2:13b": "meta-llama/Llama-2-13b-hf",
-    "llama2:7b": "meta-llama/Llama-2-7b-hf",
-    "mistral": "mistralai/Mistral-7B-v0.1",
-    "mixtral": "mistralai/Mixtral-8x7B-v0.1",
-    "qwen2:72b": "Qwen/Qwen2-72B",
-    "qwen2:7b": "Qwen/Qwen2-7B",
-    "qwen3:32b": "Qwen/Qwen3-32B",
-    "falcon:180b": "tiiuae/falcon-180B",
-    "qwen3-coder:30b": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
-    "deepseek-v3:671b": "deepseek-ai/DeepSeek-V3",
-    "gpt-oss:20b": "openai/gpt-oss-20b",
-    "gpt-oss:12b": "openai/gpt-oss-12b",
-    "lmsys/gpt-oss-120b-bf16": "lmsys/gpt-oss-120b-bf16",
-    "lmsys/gpt-oss-20b-bf16": "lmsys/gpt-oss-20b-bf16",
-    "qwen3:235b": "Qwen/Qwen3-235B-A22B",
-}
-
 
 # Configuration constants
 MAX_RETRIES = 120  # 10 minutes max wait time

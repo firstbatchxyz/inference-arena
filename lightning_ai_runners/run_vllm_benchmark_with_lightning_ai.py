@@ -1,102 +1,122 @@
 import datetime
 import os
 import time
-
-import requests
-import runpod
-
-from clients import GuideLLMBenchmarkClient, Mongo, RunpodClient
+from lightning_sdk import Studio
+from clients import GuideLLMBenchmarkClient, Mongo
 from utils.tokenizer_utils import HF_TOKENIZER
-from utils.vllm_utils import (
-    build_vllm_docker_args,
-    get_compatible_vllm_image,
-    get_vllm_environment_vars,
+from utils.vllm_utils import build_vllm_serve_args, get_vllm_environment_vars
+from utils.ngrok_utils import (
+    install_ngrok,
+    setup_ngrok_tunnel,
+    verify_tunnel_connectivity,
+    cleanup_ngrok,
 )
 
 
-async def create_vllm_pod(
-    gpu_id: str,
-    volume_in_gb: int,
-    container_disk_in_gb: int,
+async def create_vllm_lightning_ai_server(
+    studio_name: str,
+    teamspace: str,
+    org: str,
     llm_id: str,
     port: int = 8000,
     llm_parameter_size: str = "",
     llm_common_name: str = "",
     gpu_count: int = 1,
+    gpu_id: str = "",
+    quantization: str = "",
 ):
+    """
+    Create and benchmark vLLM server on Lightning AI Studio
+    """
 
-    ## Initialize mongo client
+    # Initialize mongo client
     mongo_client = Mongo(os.getenv("MONGODB_URL"))
 
-    ## Apply api key to runpod
-    runpod.api_key = os.getenv("RUNPOD_API_KEY")
+    # Initialize Lightning AI Studio
+    studio = Studio(name=studio_name, teamspace=teamspace, org=org)
 
-    ## Also apply api key to runpod graphql client for calculating used balance
-    runpod_graphql_client = RunpodClient(api_key=os.getenv("RUNPOD_API_KEY"))
+    time_before_server_creation = datetime.datetime.now()
 
-    time_before_pod_creation = datetime.datetime.now()
-
-    # Build docker args using utility function
-    docker_args = build_vllm_docker_args(llm_id, port, gpu_count)
-
-    # Choose Docker image based on CUDA compatibility and model requirements or etc.
-    image_name = get_compatible_vllm_image(gpu_id, llm_id)
-
+    # Set environment variables
     env_vars = get_vllm_environment_vars(llm_id, llm_parameter_size, gpu_id, gpu_count)
+    env_commands = []
+    for key, value in env_vars.items():
+        env_commands.append(f"export {key}={value}")
 
-    # Create a pod in runpod with vLLM image
-    pod = runpod.create_pod(
-        name="vllm-pod",
-        image_name=image_name,
-        gpu_type_id=gpu_id,
-        env=env_vars,
-        docker_args=docker_args,
-        volume_in_gb=volume_in_gb,
-        container_disk_in_gb=container_disk_in_gb,
-        volume_mount_path="/root/.cache/huggingface",
-        ports=f"{port}/http",
-        gpu_count=gpu_count,
-    )
+    studio.run(" && ".join(env_commands))
 
-    pod_id = pod["id"]
+    # Install uv for faster installation
+    studio.run("curl -LsSf https://astral.sh/uv/install.sh | sh")
 
-    pod_url = f"https://{pod_id}-{port}.proxy.runpod.net"
+    # Install vLLM
+    studio.run("uv pip install -U vllm")
+    print("vLLM installed successfully")
 
-    # Check if vLLM server is ready. Guidellm client also do that but it is calculating vLLM server readiness time
+    # Make sure numpy and scikit-learn are compatible
+    studio.run("uv pip uninstall numpy && uv pip install numpy==1.26.4")
+
+    # Install ngrok for creating public tunnel
+    install_ngrok(studio)
+    print("ngrok installed successfully")
+
+    # Build vLLM serve arguments
+    serve_args = build_vllm_serve_args(llm_id, port, gpu_count, quantization)
+    vllm_command = f"vllm serve {serve_args}"
+    print("vLLM serve arguments built successfully")
+    # Start vLLM server in background
+    studio.run_and_detach(vllm_command)
+    print("vLLM server started successfully")
+    # Wait for vLLM server to be ready
     while True:
         try:
-            response = requests.get(pod_url + "/v1/models")
-            response = response.json()
-            if response.get("data")[0].get("id") == llm_id:
-                print(f"vLLM server is ready at {pod_url} with model {llm_id}")
-                vllm_server_readiness_time = datetime.datetime.now()
-                break
-            else:
-                time.sleep(1)
+            health_check = studio.run(
+                f"curl -s http://localhost:{port}/health || echo 'not_ready'"
+            )
+            if "not_ready" not in health_check:
+                # Verify model is loaded by checking models endpoint
+                models_response = studio.run(
+                    f"curl -s http://localhost:{port}/v1/models"
+                )
+                if llm_id in models_response:
+                    print(
+                        f"vLLM server is ready at http://localhost:{port} with model {llm_id}"
+                    )
+                    vllm_server_readiness_time = datetime.datetime.now()
+                    break
         except Exception:
-            time.sleep(1)
+            pass
+
+        time.sleep(1)
 
     time_taken_to_start_vllm_server = (
-        vllm_server_readiness_time - time_before_pod_creation
+        vllm_server_readiness_time - time_before_server_creation
     )
-
     time_taken_to_start_vllm_server_seconds = int(
         time_taken_to_start_vllm_server.total_seconds()
     )
 
+    # Set up ngrok tunnel
+    tunnel_url = setup_ngrok_tunnel(studio, port)
+
+    # Verify tunnel is working
+    verify_tunnel_connectivity(studio, tunnel_url)
+
+    # Generate unique server ID
+    server_id = f"lightning-ai-{int(time.time())}"
+
     pod_details = {
-        "pod_id": pod_id,
-        "pod_url": pod_url,
+        "pod_id": server_id,  # Use server_id as pod_id equivalent
+        "pod_url": tunnel_url,
         "time_taken_to_start_server": time_taken_to_start_vllm_server_seconds,
         "time_taken_to_upload_llm": time_taken_to_start_vllm_server_seconds,
         "llm_id": llm_id,
-        "gpu_id": gpu_id,
-        "volume_in_gb": volume_in_gb,
-        "container_disk_in_gb": container_disk_in_gb,
+        "gpu_id": "lightning-ai-gpu",  # Lightning AI doesn't expose specific GPU IDs
+        "volume_in_gb": 0,  # Lightning AI manages storage
+        "container_disk_in_gb": 0,  # Lightning AI manages storage
         "port": port,
         "created_at": datetime.datetime.now(),
         "inference_name": "VLLM",
-        "server_type": "Runpod",
+        "server_type": "Lightning AI",
         "llm_parameter_size": llm_parameter_size,
         "llm_common_name": llm_common_name,
         "gpu_count": gpu_count,
@@ -108,7 +128,7 @@ async def create_vllm_pod(
 
     # Initialize benchmark client
     client = GuideLLMBenchmarkClient(
-        base_url=pod_url,
+        base_url=tunnel_url,
         model=llm_id,
         mongo_url=os.getenv("MONGODB_URL"),
         processor=HF_TOKENIZER.get(llm_id, None),
@@ -134,7 +154,7 @@ async def create_vllm_pod(
             if report and report.benchmarks:
                 benchmark_report = report.benchmarks[0]
                 result_data = client._extract_benchmark_metrics(
-                    benchmark_report, pod_id, benchmark_report_rate + 1
+                    benchmark_report, server_id, benchmark_report_rate + 1
                 )
                 mongo_client.insert_one("benchmark_results", result_data)
             else:
@@ -162,7 +182,7 @@ async def create_vllm_pod(
         if report and report.benchmarks:
             benchmark_report = report.benchmarks[0]
             result_data = client._extract_benchmark_metrics(
-                benchmark_report, pod_id, None, "throughput"
+                benchmark_report, server_id, None, "throughput"
             )
             mongo_client.insert_one("benchmark_results", result_data)
         else:
@@ -173,12 +193,12 @@ async def create_vllm_pod(
 
     benchmark_duration = datetime.datetime.now() - benchmark_start_time
 
-    pod_cost = runpod_graphql_client.calculate_used_balance(pod_id)
+    pod_cost = 0.0  # Lightning AI cost is not exposed via API
 
     # After benchmark is completed update the pod details with pod cost and benchmark duration
     mongo_client.update_one(
         "pod_benchmarks",
-        {"pod_id": pod_id},
+        {"pod_id": server_id},
         {
             "$set": {
                 "pod_cost": pod_cost,
@@ -187,6 +207,7 @@ async def create_vllm_pod(
         },
     )
 
-    # Stop the pod
-    runpod.terminate_pod(pod_id)
-    print(f"Pod {pod_id} terminated successfully")
+    # Clean up tunnel processes
+    cleanup_ngrok(studio)
+
+    print(f"Lightning AI server {server_id} benchmark completed successfully")

@@ -10,4 +10,8 @@ dependencies = [
     "pymongo>=4.6.0",
     "runpod>=1.7.0",
     "guidellm>=0.2.1",
+    "lightning-sdk>=2025.8.28",
+    "scaleway>=0.1.0",
+    "paramiko>=3.4.0",
+
 ]

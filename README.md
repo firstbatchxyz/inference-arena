@@ -6,8 +6,8 @@ A comprehensive benchmarking platform for comparing LLM (Large Language Model) p
 
 We aim to show and allow users to compare performances of different LLM models across various GPU configurations and inference engines. The system currently supports:
 
-- **Cloud Provider**: RunPod
-- **Inference Engines**: Ollama, SGLang, vLLM
+- **Cloud Provider**: RunPod,Lightning AI, Scaleway
+- **Inference Engines**: Ollama, SGLang, vLLM , LMStudio, MLX-lm
 - **Deployment**: Same LLM models with different inference engines on the same GPU for fair performance comparison
 
 ## 🌐 View Benchmark Results
@@ -99,13 +99,27 @@ First set the enviroments
 
 ### Enviroments
 - `MONGODB_URL`: `"mongodb://<username>:<password>@<host>:<port>/<database>?options"` — URL that contains benchmark and API utilities.
-- `HF_TOKEN`: `"123123"` — Client ID from Huggingface - due to access private models
-- `RUNPOD_API_KEY`: `"sk_12321313"` — Runpod API key for create and manage pod.
+- `HF_TOKEN`: `"123123"` — Hugging Face access token, required for accessing private models.
+- `RUNPOD_API_KEY`: `"sk_12321313"` — Runpod API key for creating and managing pods.
+- `LIGHTNING_USER_ID`: `"123123"` — Lightning AI user ID.
+- `LIGHTNING_API_KEY`: `"123123"` — Lightning AI API key.
+- `NGROK_AUTH_TOKEN`: `"123123"` — ngrok authentication token for creating public tunnels.
+- `SCW_ACCESS_KEY`: `"123123"` — Scaleway access key.
+- `SCW_SECRET_KEY`: `"123123"` — Scaleway secret key.
+- `SCW_DEFAULT_ORGANIZATION_ID`: `"123123"` — Scaleway default organization ID.
+- `SCW_DEFAULT_PROJECT_ID`: `"123123"` — Scaleway default project ID.
 
 After creating .env file with these variables you should run 
 
 ```sh
-uv run --env-file=.env python runner.py --inference_engine ollama \
+uv run --env-file=.env python <runner-file-path>.py --inference_engine ollama \
+    --Args in runner-file-path
+```
+
+Example:
+
+```sh
+uv run --env-file=.env python runpod_runner.py --inference_engine ollama \
   --gpu_id "NVIDIA H200" \
   --volume_in_gb 1000 \
   --container_disk_in_gb 500 \
@@ -114,10 +128,12 @@ uv run --env-file=.env python runner.py --inference_engine ollama \
   --llm_common_name "Qwen2 7b" \
   --gpu_count 1
 ```
+
+
 For Sglang and VLLM you need to give HF model path as llm_id
 
 ```sh
-uv run --env-file=.env python runner.py --inference_engine vllm \
+uv run --env-file=.env python <runner-file-path>.py --inference_engine vllm \
   --gpu_id "NVIDIA H200" \
   --volume_in_gb 1000 \
   --container_disk_in_gb 500 \
