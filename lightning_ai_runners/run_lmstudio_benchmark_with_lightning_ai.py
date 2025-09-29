@@ -40,14 +40,20 @@ async def create_lmstudio_lightning_ai_server(
     install_commands = [
         "sudo apt-get update",
         "sudo apt-get install -y wget curl xvfb fuse libnspr4 libnss3 libatk-bridge2.0-0 libgtk-3-0 libasound2 || true",
-        "wget https://installers.lmstudio.ai/linux/x64/0.3.25-2/LM-Studio-0.3.25-2-x64.AppImage -O $HOME/LMStudio",
-        "chmod +x $HOME/LMStudio",
-        "xvfb-run --auto-servernum $HOME/LMStudio --no-sandbox >/tmp/lmstudio_first_run.log 2>&1 || true",
-        "mkdir -p $HOME/.lmstudio/.internal",
-        'bash -lc \'cat > $HOME/.lmstudio/.internal/http-server-config.json <<EOF\n{\n"path": "\'$HOME\'/LMStudio",\n"argv": ["\'$HOME\'/LMStudio"],\n"cwd": "\'$HOME\'"\n}\nEOF\'',
+        "wget https://installers.lmstudio.ai/linux/x64/0.3.25-2/LM-Studio-0.3.25-2-x64.AppImage -O LMStudio",
+        "chmod +x ./LMStudio",
+        "xvfb-run --auto-servernum ./LMStudio --no-sandbox",
+        "mkdir -p ./.lmstudio/.internal",
+        'bash -lc \'cat > ./.lmstudio/.internal/http-server-config.json <<EOF\n{\n"path": "\'./LMStudio\'",\n"argv": ["./LMStudio"],\n"cwd": "\'./\'"\n}\nEOF\'',
     ]
 
     studio.run(" && ".join(install_commands))
+
+    print(
+        studio.run(
+            "./LMStudio --appimage-extract-and-run",
+        )
+    )
 
     # Install ngrok for public tunnel
     install_ngrok(studio)

@@ -585,3 +585,4 @@ README.tokens.md
 
 # Ignore personal playground files
 run_missing_benchmark.py
+run_throughput_benchmark.py

@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 import os
 import sys
@@ -55,6 +54,7 @@ async def create_mlx_scaleway_server(
         default_region=os.getenv("SCW_REGION"),
         default_zone=ZONE_FR_PAR_1,
     )
+    print(client.validate_credentials())
     apple_silicon_api = ApplesiliconV1Alpha1API(client)
 
     time_before_server_creation = datetime.datetime.now()

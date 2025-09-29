@@ -12,7 +12,7 @@ async def main():
     parser.add_argument(
         "--server_id",
         type=str,
-        default="dbd44555-0b3f-4044-be34-4d569713ac23",
+        default="9e3d8d31-e1ea-4dd8-9f63-0ea3766a072d",
         help="Scaleway Apple server ID",
     )
     parser.add_argument(
