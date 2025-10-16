@@ -13,5 +13,8 @@ dependencies = [
     "lightning-sdk>=2025.8.28",
     "scaleway>=0.1.0",
     "paramiko>=3.4.0",
-
+    "llm-optimizer",
 ]
+
+[tool.uv.sources]
+llm-optimizer = { git = "https://github.com/bentoml/llm-optimizer.git" }
