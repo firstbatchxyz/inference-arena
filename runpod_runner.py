@@ -5,6 +5,7 @@ import sys
 from runpod_runners.run_ollama_benchmark_with_runpod import create_ollama_pod
 from runpod_runners.run_vllm_benchmark_with_runpod import create_vllm_pod
 from runpod_runners.run_sglang_benchmark_with_runpod import create_sglang_pod
+from runpod_runners.run_tensorrt_benchmark_with_runpod import create_tensorrt_pod
 
 
 # Support for running the script with python run_<inference-engine>_benchmark_with_runpod.py --gpu_id <gpu_id> --volume_in_gb <volume_in_gb> --container_disk_in_gb <container_disk_in_gb> --llm_id <llm_id> --port <port> --llm_parameter_size <llm_parameter_size> --llm_common_name <llm_common_name> --gpu_count <gpu_count>
@@ -18,7 +19,7 @@ async def main():
         "--inference_engine",
         type=str,
         required=True,
-        help="Inference engine to use (ollama, vllm, sglang)",
+        help="Inference engine to use (ollama, vllm, sglang, tensorrt)",
     )
     parser.add_argument(
         "--gpu_id", type=str, required=True, help="GPU type ID (e.g., NVIDIA H200)"
@@ -74,6 +75,24 @@ async def main():
                 gpu_count=args.gpu_count,
             )
             print("vLLM benchmark completed successfully!")
+
+
+        
+
+        elif args.inference_engine == "tensorrt":
+            await create_tensorrt_pod(
+                gpu_id=args.gpu_id,
+                volume_in_gb=args.volume_in_gb,
+                container_disk_in_gb=args.container_disk_in_gb,
+                llm_id=args.llm_id,
+                port=args.port,
+                llm_parameter_size=args.llm_parameter_size,
+                llm_common_name=args.llm_common_name,
+                gpu_count=args.gpu_count,
+            )
+            print("TensorRT-LLM benchmark completed successfully!")
+
+
 
         elif args.inference_engine == "sglang":
             await create_sglang_pod(

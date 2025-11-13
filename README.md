@@ -7,7 +7,7 @@ A comprehensive benchmarking platform for comparing LLM (Large Language Model) p
 We aim to show and allow users to compare performances of different LLM models across various GPU configurations and inference engines. The system currently supports:
 
 - **Cloud Provider**: RunPod,Lightning AI, Scaleway
-- **Inference Engines**: Ollama, SGLang, vLLM , LMStudio, MLX-lm
+- **Inference Engines**: Ollama, SGLang, vLLM, TensorRT-LLM, LMStudio, MLX-lm
 - **Deployment**: Same LLM models with different inference engines on the same GPU for fair performance comparison
 
 ## 🌐 View Benchmark Results
@@ -130,7 +130,7 @@ uv run --env-file=.env python runpod_runner.py --inference_engine ollama \
 ```
 
 
-For Sglang and VLLM you need to give HF model path as llm_id
+For SGLang, vLLM, and TensorRT-LLM you need to give HF model path as llm_id
 
 ```sh
 uv run --env-file=.env python <runner-file-path>.py --inference_engine vllm \
@@ -141,6 +141,19 @@ uv run --env-file=.env python <runner-file-path>.py --inference_engine vllm \
   --llm_parameter_size "7b" \
   --llm_common_name "Qwen2 7b" \
   --gpu_count 1
+```
+
+TensorRT-LLM example:
+
+```sh
+uv run --env-file=.env python runpod_runner.py --inference_engine tensorrt \
+  --gpu_id "NVIDIA H200" \
+  --volume_in_gb 1000 \
+  --container_disk_in_gb 500 \
+  --llm_id "Qwen/Qwen3-8B" \
+  --llm_parameter_size "8b" \
+  --llm_common_name "Qwen3 8B" \
+  --gpu_count 1 \
 ```
 
 
