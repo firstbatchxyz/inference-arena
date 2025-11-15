@@ -7,7 +7,7 @@ A comprehensive benchmarking platform for comparing LLM (Large Language Model) p
 We aim to show and allow users to compare performances of different LLM models across various GPU configurations and inference engines. The system currently supports:
 
 - **Cloud Provider**: RunPod,Lightning AI, Scaleway
-- **Inference Engines**: Ollama, SGLang, vLLM , LMStudio, MLX-lm
+- **Inference Engines**: Ollama, SGLang, vLLM, TensorRT-LLM, LMStudio, MLX-lm
 - **Deployment**: Same LLM models with different inference engines on the same GPU for fair performance comparison
 
 ## 🌐 View Benchmark Results
@@ -130,7 +130,7 @@ uv run --env-file=.env python runpod_runner.py --inference_engine ollama \
 ```
 
 
-For Sglang and VLLM you need to give HF model path as llm_id
+For SGLang, vLLM, and TensorRT-LLM you need to give HF model path as llm_id
 
 ```sh
 uv run --env-file=.env python <runner-file-path>.py --inference_engine vllm \
@@ -141,6 +141,68 @@ uv run --env-file=.env python <runner-file-path>.py --inference_engine vllm \
   --llm_parameter_size "7b" \
   --llm_common_name "Qwen2 7b" \
   --gpu_count 1
+```
+
+TensorRT-LLM example:
+
+```sh
+uv run --env-file=.env python runpod_runner.py --inference_engine tensorrt \
+  --gpu_id "NVIDIA NVIDIA H200" \
+  --volume_in_gb 1000 \
+  --container_disk_in_gb 500 \
+  --llm_id "Qwen/Qwen3-8B" \
+  --llm_parameter_size "8b" \
+  --llm_common_name "Qwen3 8B" \
+  --gpu_count 1 \
+  --port 8000
+```
+
+### TensorRT-LLM Optional Parameters
+
+TensorRT-LLM supports several optional parameters that can be passed via CLI to fine-tune performance and memory usage. These parameters are automatically converted into a YAML configuration file that TensorRT-LLM reads at runtime. The key thing to understand is that these are completely optional.
+
+**How it works:** When you provide optional parameters via CLI (like `--moe_backend` or `--ep_size`), the system creates a temporary YAML configuration file inside the container. This YAML file is then passed to TensorRT-LLM's serve command which reads these settings and applies them during model initialization. This approach gives you flexibility to tune performance without needing to manually create configuration files.
+
+**Available optional parameters by model:**
+
+#### Qwen3-30B-A3B (MoE Model)
+- `--ep_size` (integer): Expert parallelism size for the MoE layers. Controls how experts are distributed across GPUs.
+
+**Example:**
+```sh
+uv run --env-file=.env python runpod_runner.py --inference_engine tensorrt \
+  --gpu_id "NVIDIA H200" \
+  --volume_in_gb 1000 \
+  --container_disk_in_gb 500 \
+  --llm_id "Qwen/Qwen3-30B-A3B" \
+  --llm_parameter_size "30B" \
+  --llm_common_name "Qwen3 30B A3B" \
+  --gpu_count 1 \
+  --port 8000 \
+  --ep_size 1
+```
+
+#### GPT-OSS-120B (MoE Model)
+- `--moe_backend` (string): MoE kernel backend selection. Options: `TRITON` (recommended for H200 GPUs), `CUTLASS` (high throughput), or `TRTLLM` (default). TRITON requires TensorRT-LLM 1.1.0rc1+.
+- `--kv_cache_free_gpu_memory_fraction` (float): Fraction of free GPU memory to allocate for KV cache. Values between 0.0 and 1.0. Higher values allow more concurrent requests but may cause OOM errors.
+- `--enable_attention_dp` (string): Enable attention data parallelism. Use `"true"` for maximum throughput scenarios, `"false"` for low-latency use cases. Default is `false`.
+- `--ep_size` (integer): Expert parallelism size for distributing MoE experts across GPUs.
+
+**Example:**
+```sh
+uv run --env-file=.env python runpod_runner.py --inference_engine tensorrt \
+  --gpu_id "NVIDIA H200" \
+  --volume_in_gb 1000 \
+  --container_disk_in_gb 500 \
+  --llm_id "openai/gpt-oss-120B" \
+  --llm_parameter_size "120b" \
+  --llm_common_name "GPT-OSS 120B" \
+  --gpu_count 1 \
+  --port 8000 \
+  --moe_backend TRITON \
+  --kv_cache_free_gpu_memory_fraction 0.9 \
+  --enable_attention_dp "false" \
+  --ep_size 1
 ```
 
 
