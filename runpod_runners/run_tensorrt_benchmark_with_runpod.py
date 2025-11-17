@@ -1,3 +1,4 @@
+import base64
 import datetime
 import os
 import time
@@ -60,7 +61,6 @@ async def create_tensorrt_pod(
     # If no optional parameters were provided, we can just run trtllm-serve directly.
     if yaml_config_content:
         # encoding the yaml content as base64 to safely pass it through the shell command.
-        import base64
         config_b64 = base64.b64encode(yaml_config_content.encode('utf-8')).decode('ascii')
         # TensorRT-LLM will automatically read this config file when it sees --extra_llm_api_options.
         docker_cmd = f"sh -c 'echo {config_b64} | base64 -d > /tmp/trtllm_config.yaml && trtllm-serve {serve_args}'"

@@ -1,6 +1,11 @@
 import os
 from typing import Any
 
+try:
+    import yaml
+except ImportError:
+    yaml = None
+
 
 def get_compatible_tensorrt_image(gpu_id: str = "", model_id: str = "") -> str:
     model_id_lower = model_id.lower()
@@ -31,11 +36,6 @@ def build_tensorrt_serve_args(
     - Qwen3-30B-A3B: Only supports ep_size (expert parallelism for MoE)
     - GPT-OSS-120B: Supports all optional parameters (moe_backend, kv_cache, attention_dp, ep_size)
     """
-    try:
-        import yaml
-    except ImportError:
-        yaml = None
-
     # Base arguments that all models use
     serve_args_list = [
         llm_id, 
