@@ -51,7 +51,7 @@ async def main():
         type=str,
         default=None,
         choices=["TRITON", "CUTLASS", "TRTLLM"],
-        help="MoE backend for TensorRT-LLM (TRITON, CUTLASS, or TRTLLM). Only for MoE models like GPT-OSS. Qwen3 models use PyTorch backend by default.",
+        help="MoE backend for TensorRT-LLM (TRITON, CUTLASS, or TRTLLM). For GPT-OSS: all backends supported. For KimiK2: only TRTLLM supported (v1.2.0rc2+). Qwen3 models use PyTorch backend by default.",
     )
     parser.add_argument(
         "--kv_cache_free_gpu_memory_fraction",

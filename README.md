@@ -205,6 +205,29 @@ uv run --env-file=.env python runpod_runner.py --inference_engine tensorrt \
   --ep_size 1
 ```
 
+#### Kimi-K2-Instruct (MoE Model)
+- `--moe_backend` (string, optional): MoE kernel backend selection. **Only `TRTLLM` is supported** for Kimi-K2 (added in TensorRT-LLM 1.2.0rc2, [PR #7761](https://github.com/NVIDIA/TensorRT-LLM/pull/7761)). If not provided, uses PyTorch backend by default.
+- `--ep_size` (integer, optional): Expert parallelism size for distributing MoE experts across GPUs.
+- `--enable_attention_dp` (string, optional): Enable attention data parallelism. Use `"true"` for maximum throughput scenarios, `"false"` for low-latency use cases. Default is `false`.
+
+**Important Notes:**
+- Kimi-K2 is a very large model (1 trillion total parameters, 32B activated) requiring substantial GPU resources.
+- Single GPU setups will not work due to memory constraints.
+
+**Example:**
+```sh
+uv run --env-file=.env python runpod_runner.py --inference_engine tensorrt \
+  --gpu_id "NVIDIA H200" \
+  --volume_in_gb 1500 \
+  --container_disk_in_gb 1500 \
+  --llm_id "moonshotai/Kimi-K2-Instruct" \
+  --llm_parameter_size "32B" \
+  --llm_common_name "Kimi-K2" \
+  --gpu_count 8 \
+  --port 8000 \
+  --ep_size 8
+```
+
 
 
 

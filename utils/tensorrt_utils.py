@@ -11,7 +11,11 @@ def get_compatible_tensorrt_image(gpu_id: str = "", model_id: str = "") -> str:
     model_id_lower = model_id.lower()
     if "gpt-oss" in model_id_lower or "gpt/oss" in model_id_lower:
         return "nvcr.io/nvidia/tensorrt-llm/release:gpt-oss-dev"
+    elif "kimi-k2" in model_id_lower or "kimi/k2" in model_id_lower or "moonshotai/kimi-k2" in model_id_lower:
+        # Using 1.2.0rc2 which has MoE TRTLLM backend support for KimiK2 (PR #7761)
+        return "nvcr.io/nvidia/tensorrt-llm/release:1.2.0rc2"
     else:
+        # stable image for qwen-3
         return "nvcr.io/nvidia/tensorrt-llm/release:1.0.0"
 
 
@@ -35,7 +39,9 @@ def build_tensorrt_serve_args(
     Different models support different optional parameters:
     - Qwen3-30B-A3B: Only supports ep_size (expert parallelism for MoE)
     - GPT-OSS-120B: Supports all optional parameters (moe_backend, kv_cache, attention_dp, ep_size)
+    - Kimi-K2: Supports moe_backend (optional, only TRTLLM is supported - added in v1.2.0rc2, PR #7761), ep_size, and enable_attention_dp. Default backend is pytorch.
     """
+
     # Base arguments that all models use
     serve_args_list = [
         llm_id, 
@@ -68,6 +74,23 @@ def build_tensorrt_serve_args(
         _add_config_if_provided(config_dict, "kv_cache_free_gpu_memory_fraction", kv_cache_free_gpu_memory_fraction)
         _add_config_if_provided(config_dict, "enable_attention_dp", enable_attention_dp)
         _add_config_if_provided(config_dict, "moe_expert_parallel_size", ep_size)
+    
+    elif "kimi-k2" in llm_id_lower or "kimi/k2" in llm_id_lower or "moonshotai/kimi-k2" in llm_id_lower:
+        serve_args_list.append("--trust_remote_code")
+        
+        # MoE backend selection - only TRTLLM is supported for KimiK2 (added in v1.2.0rc2, PR #7761)
+        # Only add if user explicitly provides it, default is pytorch backend
+        if moe_backend is not None:
+            if moe_backend != "TRTLLM":
+                raise ValueError(f"KimiK2 only supports TRTLLM MoE backend (added in v1.2.0rc2), got: {moe_backend}")
+            config_dict["moe_config"] = {"backend": moe_backend}
+        
+        # Expert parallelism for MoE (optional - if not provided, TensorRT-LLM will use its default)
+        if ep_size is not None:
+            serve_args_list.append(f"--ep_size {ep_size}")
+        
+        # Attention data parallelism
+        _add_config_if_provided(config_dict, "enable_attention_dp", enable_attention_dp)
 
     # Generate YAML config file if any optional parameters were provided
     if config_dict:
