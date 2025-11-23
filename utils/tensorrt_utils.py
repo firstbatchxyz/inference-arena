@@ -14,6 +14,14 @@ def get_compatible_tensorrt_image(gpu_id: str = "", model_id: str = "") -> str:
     elif "kimi-k2" in model_id_lower or "kimi/k2" in model_id_lower or "moonshotai/kimi-k2" in model_id_lower:
         # Using 1.2.0rc2 which has MoE TRTLLM backend support for KimiK2 (PR #7761)
         return "nvcr.io/nvidia/tensorrt-llm/release:1.2.0rc2"
+    elif "minimax-m2" in model_id_lower or "minimaxai/minimax-m2" in model_id_lower:
+        # Try 1.0.0 first (more compatible with RunPod drivers)
+        # If MiniMax-M2 requires 1.2.0rc2 features, this may need to be updated
+        # Note: 1.2.0rc2 requires newer drivers (575.51+) which RunPod may not have
+        return "nvcr.io/nvidia/tensorrt-llm/release:1.0.0"
+    elif "deepseek" in model_id_lower:
+        # DeepSeek-R1/V3 support using stable 1.0.0 image
+        return "nvcr.io/nvidia/tensorrt-llm/release:1.0.0"
     else:
         # stable image for qwen-3
         return "nvcr.io/nvidia/tensorrt-llm/release:1.0.0"
@@ -33,6 +41,7 @@ def build_tensorrt_serve_args(
     kv_cache_free_gpu_memory_fraction: float | None = None,
     enable_attention_dp: bool | None = None,
     ep_size: int | None = None,
+    pp_size: int | None = None,
 ) -> tuple[str, str | None]:
     """
     Builds TensorRT-LLM serve arguments and optional YAML configuration, optional parameters are only included in the YAML config if explicitly provided via CLI.
@@ -40,6 +49,7 @@ def build_tensorrt_serve_args(
     - Qwen3-30B-A3B: Only supports ep_size (expert parallelism for MoE)
     - GPT-OSS-120B: Supports all optional parameters (moe_backend, kv_cache, attention_dp, ep_size)
     - Kimi-K2: Supports moe_backend (optional, only TRTLLM is supported - added in v1.2.0rc2, PR #7761), ep_size, and enable_attention_dp. Default backend is pytorch.
+    - DeepSeek-R1/V3: Supports ep_size and pp_size as CLI args, --trust_remote_code. Advanced options via YAML config.
     """
 
     # Base arguments that all models use
@@ -57,7 +67,23 @@ def build_tensorrt_serve_args(
     yaml_config_content = None
     llm_id_lower = llm_id.lower()
     
-    if "qwen3" in llm_id_lower:
+    if "deepseek" in llm_id_lower:
+        serve_args_list.append("--trust_remote_code")
+        
+        # Expert parallelism for MoE (optional - if not provided, TensorRT-LLM will use its default)
+        if ep_size is not None:
+            serve_args_list.append(f"--ep_size {ep_size}")
+        
+        # Pipeline parallelism (optional)
+        if pp_size is not None:
+            serve_args_list.append(f"--pp_size {pp_size}")
+        
+        # Advanced options can be specified via YAML config if needed
+        # (kv_cache_free_gpu_memory_fraction, enable_attention_dp, etc.)
+        _add_config_if_provided(config_dict, "kv_cache_free_gpu_memory_fraction", kv_cache_free_gpu_memory_fraction)
+        _add_config_if_provided(config_dict, "enable_attention_dp", enable_attention_dp)
+    
+    elif "qwen3" in llm_id_lower:
         serve_args_list.append("--trust_remote_code")
         
         if ("qwen3-30b-a3b" in llm_id_lower or "qwen/qwen3-30b-a3b" in llm_id_lower) and ep_size is not None:

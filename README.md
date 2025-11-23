@@ -228,6 +228,27 @@ uv run --env-file=.env python runpod_runner.py --inference_engine tensorrt \
   --ep_size 8
 ```
 
+#### DeepSeek-R1/V3
+- `--ep_size` (integer, optional): Expert parallelism size for MoE layers. Controls how experts are distributed across GPUs.
+- `--pp_size` (integer, optional): Pipeline parallelism size for multi-GPU setups.
+- `--kv_cache_free_gpu_memory_fraction` (float, optional): Fraction of free GPU memory to allocate for KV cache. Values between 0.0 and 1.0.
+- `--enable_attention_dp` (string, optional): Enable attention data parallelism. Use `"true"` for maximum throughput, `"false"` for low-latency. Default is `false`.
+
+**Example:**
+```sh
+uv run --env-file=.env python runpod_runner.py --inference_engine tensorrt \
+  --gpu_id "NVIDIA H200" \
+  --volume_in_gb 1000 \
+  --container_disk_in_gb 500 \
+  --llm_id "deepseek-ai/DeepSeek-R1" \
+  --llm_parameter_size "7b" \
+  --llm_common_name "DeepSeek R1" \
+  --gpu_count 1 \
+  --port 8000 \
+  --ep_size 1 \
+  --pp_size 1
+```
+
 
 
 
