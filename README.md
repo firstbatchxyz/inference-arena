@@ -91,6 +91,28 @@ We use `uv` for the Benchmark. Sync your environment via:
 uv sync
 ```
 
+### Lightning AI Setup (for automated studio management)
+
+For Lightning AI runners, install and configure the Lightning CLI:
+
+```bash
+# Install Lightning CLI
+pip install lightning
+
+# Add to your PATH (choose the appropriate one for your setup)
+export PATH="$HOME/.local/bin:$PATH"                    # For pip installs
+export PATH="$HOME/Library/Python/3.11/bin:$PATH"      # For macOS Python 3.11
+
+# Login to Lightning AI
+lightning login
+```
+
+**Platform Support:**
+- ✅ **macOS/Linux/WSL**: Automatic studio creation and cleanup
+- ❌ **Windows**: Manual studio management required (try WSL for automation)
+
+**Note**: On supported platforms, Lightning AI studios are automatically created, started, and stopped. No manual studio management needed!
+
 ## Usage
 
 To run the Benchmark, use the following command:
@@ -109,53 +131,57 @@ First set the enviroments
 - `SCW_DEFAULT_ORGANIZATION_ID`: `"123123"` — Scaleway default organization ID.
 - `SCW_DEFAULT_PROJECT_ID`: `"123123"` — Scaleway default project ID.
 
-After creating .env file with these variables you should run 
+After creating .env file with these variables you should run:
+
+### General Usage
 
 ```sh
-uv run --env-file=.env python <runner-file-path>.py --inference_engine ollama \
-    --Args in runner-file-path
+uv run --env-file=.env python <runner>.py \
+  --inference_engine <engine> \
+  --studio_name "MyStudio" \
+  --teamspace "firstbatch/research" \
+  --org "firstbatch" \
+  --llm_id "<model_id>" \
+  --gpu_id "<gpu_type>" \
+  --gpu_count 1 \
+  --llm_parameter_size "<size>" \
+  --llm_common_name "<display_name>"
 ```
 
-Example:
+### Examples by Platform
 
+**RunPod:**
 ```sh
-uv run --env-file=.env python runpod_runner.py --inference_engine ollama \
+uv run --env-file=.env python runpod_runner.py \
+  --inference_engine tensorrt \
   --gpu_id "NVIDIA H200" \
-  --volume_in_gb 1000 \
-  --container_disk_in_gb 500 \
-  --llm_id "qwen2:7b" \
-  --llm_parameter_size "7b" \
-  --llm_common_name "Qwen2 7b" \
-  --gpu_count 1
-```
-
-
-For SGLang, vLLM, and TensorRT-LLM you need to give HF model path as llm_id
-
-```sh
-uv run --env-file=.env python <runner-file-path>.py --inference_engine vllm \
-  --gpu_id "NVIDIA H200" \
-  --volume_in_gb 1000 \
-  --container_disk_in_gb 500 \
-  --llm_id "Qwen/Qwen2-7B" \
-  --llm_parameter_size "7b" \
-  --llm_common_name "Qwen2 7b" \
-  --gpu_count 1
-```
-
-TensorRT-LLM example:
-
-```sh
-uv run --env-file=.env python runpod_runner.py --inference_engine tensorrt \
-  --gpu_id "NVIDIA NVIDIA H200" \
   --volume_in_gb 1000 \
   --container_disk_in_gb 500 \
   --llm_id "Qwen/Qwen3-8B" \
   --llm_parameter_size "8b" \
   --llm_common_name "Qwen3 8B" \
-  --gpu_count 1 \
-  --port 8000
+  --gpu_count 1
 ```
+
+**Lightning AI (Auto-managed on macOS/Linux/WSL):**
+```sh
+uv run --env-file=.env python lightning_ai_runner.py \
+  --inference_engine tensorrt \
+  --studio_name "MyStudio" \
+  --teamspace "firstbatch/research" \
+  --org "firstbatch" \
+  --llm_id "Qwen/Qwen3-8B" \
+  --gpu_id "L4" \
+  --gpu_count 1 \
+  --llm_parameter_size "8b" \
+  --llm_common_name "Qwen3 8B"
+```
+
+### Model ID Formats by Engine
+
+- **Ollama**: `"qwen2:7b"`, `"llama3:8b"`, `"mistral:7b"`
+- **vLLM/SGLang/TensorRT**: `"Qwen/Qwen3-8B"`, `"meta-llama/Llama-3-8B"`
+- **LMStudio**: HuggingFace model paths
 
 ### TensorRT-LLM Optional Parameters
 
