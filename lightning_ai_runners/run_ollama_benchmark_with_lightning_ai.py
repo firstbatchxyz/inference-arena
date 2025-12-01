@@ -24,11 +24,12 @@ async def create_ollama_lightning_ai_server(
     teamspace: str,
     org: str,
     llm_id: str,
-    port: int = 11434,  # Default to Ollama's standard port
+    port: int = 11434,
     llm_parameter_size: str = "",
     llm_common_name: str = "",
     gpu_count: int = 1,
     gpu_id: str = "",
+    auto_managed: bool = False,
 ):
     """
     Create and benchmark Ollama server on Lightning AI Studio
@@ -38,8 +39,15 @@ async def create_ollama_lightning_ai_server(
     # Initialize mongo client
     mongo_client = Mongo(os.getenv("MONGODB_URL"))
 
-    # Initialize Lightning AI Studio
-    studio = Studio(name=studio_name, teamspace=teamspace, org=org)
+    if auto_managed:
+        try:
+            studio = Studio(name=studio_name)
+            print(f"Connected to auto-managed studio: {studio_name}")
+        except Exception as e:
+            print(f"Failed to connect to auto-managed studio, trying with teamspace: {e}")
+            studio = Studio(name=studio_name, teamspace=teamspace, org=org)
+    else:
+        studio = Studio(name=studio_name, teamspace=teamspace, org=org)
 
     time_before_server_creation = datetime.datetime.now()
 

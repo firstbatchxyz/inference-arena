@@ -23,6 +23,7 @@ async def create_lmstudio_lightning_ai_server(
     llm_common_name: str = "",
     gpu_count: int = 1,
     gpu_id: str = "",
+    auto_managed: bool = False,
 ):
     """
     Create and benchmark LM Studio server on Lightning AI Studio (headless setup using AppImage + lms CLI)
@@ -31,8 +32,15 @@ async def create_lmstudio_lightning_ai_server(
     # Initialize mongo client
     mongo_client = Mongo(os.getenv("MONGODB_URL"))
 
-    # Initialize Lightning AI Studio
-    studio = Studio(name=studio_name, teamspace=teamspace, org=org)
+    if auto_managed:
+        try:
+            studio = Studio(name=studio_name)
+            print(f"Connected to auto-managed studio: {studio_name}")
+        except Exception as e:
+            print(f"Failed to connect to auto-managed studio, trying with teamspace: {e}")
+            studio = Studio(name=studio_name, teamspace=teamspace, org=org)
+    else:
+        studio = Studio(name=studio_name, teamspace=teamspace, org=org)
 
     time_before_server_creation = datetime.datetime.now()
 
