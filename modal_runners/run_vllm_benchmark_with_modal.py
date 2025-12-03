@@ -116,11 +116,12 @@ async def create_vllm_modal_server(
         # Using shlex.split() to properly parse the string arguments
         cmd = ["vllm", "serve"] + shlex.split(serve_args)
         
-        # Add fast boot option (not handled by utility function)
-        if fast_boot:
-            cmd.append("--enforce-eager")
-        else:
-            cmd.append("--no-enforce-eager")
+        # Add fast boot option only if not already present in serve_args
+        if "--enforce-eager" not in cmd and "--no-enforce-eager" not in cmd:
+            if fast_boot:
+                cmd.append("--enforce-eager")
+            else:
+                cmd.append("--no-enforce-eager")
         
         print(f"Starting vLLM with command: {' '.join(cmd)}")
         
