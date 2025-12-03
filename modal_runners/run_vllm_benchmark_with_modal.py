@@ -2,7 +2,6 @@ import asyncio
 import datetime
 import os
 import shlex
-import subprocess
 import time
 
 import aiohttp
