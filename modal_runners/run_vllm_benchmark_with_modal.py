@@ -9,7 +9,6 @@ import modal
 
 from clients import GuideLLMBenchmarkClient, ModalClient, Mongo
 from utils.tokenizer_utils import HF_TOKENIZER
-from utils.vllm_utils import build_vllm_serve_args
 
 
 # Get the parent directory (inference-arena)
