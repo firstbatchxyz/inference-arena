@@ -6,6 +6,7 @@ from .guidellm_benchmark_client import (
     MongoDatasetLoader,
 )
 from .mongo_client import Mongo
+from .modal_client import ModalClient
 from .runpod_client import RunpodClient
 
 __all__ = [
@@ -13,6 +14,7 @@ __all__ = [
     "CustomOpenAIBackend",
     "MongoDatasetLoader",
     "Mongo",
+    "ModalClient",
     "RunpodClient",
     "LightningAIClient",
 ]
