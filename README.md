@@ -1,12 +1,12 @@
 # Dria Benchmark System
 
-A comprehensive benchmarking platform for comparing LLM (Large Language Model) performance across different GPU configurations and inference engines. Currently supports RunPod as the cloud infrastructure provider.
+A comprehensive benchmarking platform for comparing LLM (Large Language Model) performance across different GPU configurations and inference engines. Supports multiple cloud infrastructure providers including RunPod, Modal, Lightning AI, and Scaleway.
 
 ## 🎯 Project Aim
 
 We aim to show and allow users to compare performances of different LLM models across various GPU configurations and inference engines. The system currently supports:
 
-- **Cloud Provider**: RunPod,Lightning AI, Scaleway
+- **Cloud Provider**: RunPod, Modal, Lightning AI, Scaleway
 - **Inference Engines**: Ollama, SGLang, vLLM, TensorRT-LLM, LMStudio, MLX-lm
 - **Deployment**: Same LLM models with different inference engines on the same GPU for fair performance comparison
 
@@ -163,6 +163,19 @@ uv run --env-file=.env python runpod_runner.py \
   --gpu_count 1
 ```
 
+**Modal:**
+```sh
+uv run --env-file=.env python modal_runner.py \
+  --inference_engine vllm \
+  --llm_id "Qwen/Qwen3-8B" \
+  --gpu_id "A100" \
+  --gpu_count 1 \
+  --llm_parameter_size "8b" \
+  --llm_common_name "Qwen3 8B" \
+  --port 8000 \
+  --fast_boot true
+```
+
 **Lightning AI (Auto-managed on macOS/Linux/WSL):**
 ```sh
 uv run --env-file=.env python lightning_ai_runner.py \
@@ -176,6 +189,13 @@ uv run --env-file=.env python lightning_ai_runner.py \
   --llm_parameter_size "8b" \
   --llm_common_name "Qwen3 8B"
 ```
+
+**Note on Modal:** Modal automatically manages server lifecycle - servers are created, benchmarks run, and then automatically cleaned up. Cost is calculated based on GPU pricing and runtime. Before running benchmarks, install Modal CLI and authenticate:
+```sh
+pip install modal
+modal setup
+```
+If `modal setup` doesn't work, try `python -m modal setup`.
 
 ### Model ID Formats by Engine
 
