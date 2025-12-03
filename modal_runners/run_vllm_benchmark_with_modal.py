@@ -108,7 +108,6 @@ async def create_vllm_modal_server(
         if inference_arena_path not in sys.path:
             sys.path.insert(0, inference_arena_path)
         
-        
         from utils.vllm_utils import build_vllm_serve_args
         serve_args = build_vllm_serve_args(llm_id, port, gpu_count, quantization)
         
