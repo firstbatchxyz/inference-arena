@@ -7,7 +7,7 @@ A comprehensive benchmarking platform for comparing LLM (Large Language Model) p
 We aim to show and allow users to compare performances of different LLM models across various GPU configurations and inference engines. The system currently supports:
 
 - **Cloud Provider**: RunPod, Modal, Lightning AI, Scaleway
-- **Inference Engines**: Ollama, SGLang, vLLM, TensorRT-LLM, LMStudio, MLX-lm
+- **Inference Engines**: Ollama, SGLang, vLLM, TensorRT-LLM, LlamaCPP, LMStudio, MLX-lm
 - **Deployment**: Same LLM models with different inference engines on the same GPU for fair performance comparison
 
 ## 🌐 View Benchmark Results
@@ -161,6 +161,20 @@ uv run --env-file=.env python runpod_runner.py \
   --llm_parameter_size "8b" \
   --llm_common_name "Qwen3 8B" \
   --gpu_count 1
+
+# LlamaCPP example
+uv run --env-file=.env python runpod_runner.py \
+  --inference_engine llamacpp \
+  --llm_id "Qwen3-4B" \
+  --model_path "Qwen/Qwen3-4B-GGUF" \
+  --quantization "Q4_K_M" \
+  --gpu_id "NVIDIA RTX A6000" \
+  --volume_in_gb 100 \
+  --container_disk_in_gb 100 \
+  --gpu_count 2 \
+  --llm_parameter_size "4B" \
+  --llm_common_name "Qwen3 4B Q4_K_M" \
+  --port 8000
 ```
 
 **Modal:**
@@ -174,6 +188,18 @@ uv run --env-file=.env python modal_runner.py \
   --llm_common_name "Qwen3 8B" \
   --port 8000 \
   --fast_boot true
+
+# LlamaCPP example
+uv run --env-file=.env python modal_runner.py \
+  --inference_engine llamacpp \
+  --llm_id "Qwen3-4B" \
+  --model_path "Qwen/Qwen3-4B-GGUF" \
+  --quantization "Q4_K_M" \
+  --gpu_id "L4" \
+  --gpu_count 2 \
+  --llm_parameter_size "4B" \
+  --llm_common_name "Qwen3 4B Q4_K_M" \
+  --port 8000
 ```
 
 **Lightning AI (Auto-managed on macOS/Linux/WSL):**
@@ -201,6 +227,7 @@ If `modal setup` doesn't work, try `python -m modal setup`.
 
 - **Ollama**: `"qwen2:7b"`, `"llama3:8b"`, `"mistral:7b"`
 - **vLLM/SGLang/TensorRT**: `"Qwen/Qwen3-8B"`, `"meta-llama/Llama-3-8B"`
+- **LlamaCPP**: `"Qwen3-4B"` (model name) with `--model_path` pointing to GGUF files
 - **LMStudio**: HuggingFace model paths
 
 ### TensorRT-LLM Optional Parameters
