@@ -6,6 +6,7 @@ from runpod_runners.run_ollama_benchmark_with_runpod import create_ollama_pod
 from runpod_runners.run_vllm_benchmark_with_runpod import create_vllm_pod
 from runpod_runners.run_sglang_benchmark_with_runpod import create_sglang_pod
 from runpod_runners.run_tensorrt_benchmark_with_runpod import create_tensorrt_pod
+from runpod_runners.run_llamacpp_benchmark_with_runpod import create_llamacpp_pod
 
 
 # Support for running the script with python run_<inference-engine>_benchmark_with_runpod.py --gpu_id <gpu_id> --volume_in_gb <volume_in_gb> --container_disk_in_gb <container_disk_in_gb> --llm_id <llm_id> --port <port> --llm_parameter_size <llm_parameter_size> --llm_common_name <llm_common_name> --gpu_count <gpu_count>
@@ -19,7 +20,7 @@ async def main():
         "--inference_engine",
         type=str,
         required=True,
-        help="Inference engine to use (ollama, vllm, sglang, tensorrt)",
+        help="Inference engine to use (ollama, vllm, sglang, tensorrt, llamacpp)",
     )
     parser.add_argument(
         "--gpu_id", type=str, required=True, help="GPU type ID (e.g., NVIDIA H200)"
@@ -71,6 +72,25 @@ async def main():
         type=int,
         default=None,
         help="Expert parallelism size for MoE models",
+    )
+    parser.add_argument(
+        "--pp_size",
+        type=int,
+        default=None,
+        help="Pipeline parallelism size for models",
+    )
+    # llama.cpp specific parameters
+    parser.add_argument(
+        "--quantization",
+        type=str,
+        default="Q4_0",
+        help="Quantization type for llama.cpp models (default: Q4_0)",
+    )
+    parser.add_argument(
+        "--model_path",
+        type=str,
+        default="",
+        help="GGUF model path as 'repo/filename' or just 'repo' (e.g., 'Aldaris/Qwen3-14B-Q4_K_M-GGUF:Qwen3-14B-Q4_K_M.gguf')",
     )
   
 
@@ -126,6 +146,7 @@ async def main():
                 kv_cache_free_gpu_memory_fraction=args.kv_cache_free_gpu_memory_fraction,
                 enable_attention_dp=enable_attention_dp,
                 ep_size=args.ep_size,
+                pp_size=args.pp_size,
             )
             print("TensorRT-LLM benchmark completed successfully!")
 
@@ -143,6 +164,21 @@ async def main():
                 gpu_count=args.gpu_count,
             )
             print("SGLang benchmark completed successfully!")
+
+        elif args.inference_engine == "llamacpp":
+            await create_llamacpp_pod(
+                gpu_id=args.gpu_id,
+                volume_in_gb=args.volume_in_gb,
+                container_disk_in_gb=args.container_disk_in_gb,
+                llm_id=args.llm_id,
+                port=args.port,
+                llm_parameter_size=args.llm_parameter_size,
+                llm_common_name=args.llm_common_name,
+                gpu_count=args.gpu_count,
+                quantization=args.quantization,
+                model_path=args.model_path,
+            )
+            print("llama.cpp benchmark completed successfully!")
         else:
             print("Invalid inference engine")
             sys.exit(1)

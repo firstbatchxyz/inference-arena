@@ -14,6 +14,10 @@ from modal_runners.run_sglang_benchmark_with_modal import (
 from modal_runners.run_tensorrt_benchmark_with_modal import (
     create_tensorrt_modal_server,
 )
+from modal_runners.run_llamacpp_benchmark_with_modal import (
+    create_llamacpp_modal_server,
+)
+
 
 async def main():
     """Main function to handle command line execution"""
@@ -39,7 +43,7 @@ async def main():
         "--inference_engine",
         type=str,
         required=True,
-        help="Inference engine to use (vllm)",
+        help="Inference engine to use (vllm, ollama, sglang, tensorrt, llamacpp)",
     )
     parser.add_argument(
         "--quantization", type=str, default="", help="Quantization (default: )"
@@ -50,6 +54,45 @@ async def main():
         default="true",
         choices=["true", "false"],
         help="Enable fast boot mode (enforce-eager) for faster startup (default: true)",
+    )
+    # TensorRT-LLM optional parameters
+    parser.add_argument(
+        "--moe_backend",
+        type=str,
+        default=None,
+        help="MoE backend for TensorRT-LLM (TRITON/CUTLASS/TRTLLM)",
+    )
+    parser.add_argument(
+        "--ep_size",
+        type=int,
+        default=None,
+        help="Expert parallelism size for MoE models in TensorRT-LLM",
+    )
+    parser.add_argument(
+        "--pp_size",
+        type=int,
+        default=None,
+        help="Pipeline parallelism size for TensorRT-LLM",
+    )
+    parser.add_argument(
+        "--kv_cache_free_gpu_memory_fraction",
+        type=float,
+        default=None,
+        help="KV cache free GPU memory fraction for TensorRT-LLM",
+    )
+    parser.add_argument(
+        "--enable_attention_dp",
+        type=str,
+        default=None,
+        choices=["true", "false"],
+        help="Enable attention data parallelism for TensorRT-LLM",
+    )
+    # llama.cpp specific parameters
+    parser.add_argument(
+        "--model_path",
+        type=str,
+        default="",
+        help="GGUF model path as 'repo/filename' or just 'repo' (e.g., 'Aldaris/Qwen3-14B-Q4_K_M-GGUF:Qwen3-14B-Q4_K_M.gguf')",
     )
 
     args = parser.parse_args()
@@ -70,7 +113,6 @@ async def main():
                 fast_boot=fast_boot,
             )
             print("vLLM benchmark completed successfully!")
-
         elif args.inference_engine == "ollama":
             await create_ollama_modal_server(
                 llm_id=args.llm_id,
@@ -80,7 +122,7 @@ async def main():
                 gpu_id=args.gpu_id,
                 gpu_count=args.gpu_count,
             )
-
+            print("Ollama benchmark completed successfully!")
         elif args.inference_engine == "sglang":
             await create_sglang_modal_server(
                 llm_id=args.llm_id,
@@ -91,7 +133,6 @@ async def main():
                 gpu_count=args.gpu_count,
             )
             print("SGLang benchmark completed successfully!")
-        
         elif args.inference_engine == "tensorrt":
             # Convert enable_attention_dp string to boolean if provided
             enable_attention_dp = None
@@ -112,9 +153,20 @@ async def main():
                 pp_size=args.pp_size,
             )
             print("TensorRT-LLM benchmark completed successfully!")
-
+        elif args.inference_engine == "llamacpp":
+            await create_llamacpp_modal_server(
+                llm_id=args.llm_id,
+                port=args.port,
+                llm_parameter_size=args.llm_parameter_size,
+                llm_common_name=args.llm_common_name,
+                gpu_id=args.gpu_id,
+                gpu_count=args.gpu_count,
+                quantization=args.quantization,
+                model_path=args.model_path,
+            )
+            print("llama.cpp benchmark completed successfully!")
         else:
-            print("Invalid inference engine. Currently only 'vllm', 'ollama','tensorrt' and 'sglang' are supported for Modal.")
+            print("Invalid inference engine. Currently only 'vllm', 'ollama', 'sglang', 'tensorrt', and 'llamacpp' are supported for Modal.")
             sys.exit(1)
 
     except KeyboardInterrupt:
@@ -124,9 +176,6 @@ async def main():
         print(f"Benchmark failed: {e}")
         sys.exit(1)
 
-        
-
 
 if __name__ == "__main__":
     asyncio.run(main())
-
